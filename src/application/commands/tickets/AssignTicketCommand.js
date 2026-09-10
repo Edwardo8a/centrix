@@ -6,11 +6,21 @@ class AssignTicketCommand {
   }
 
   async execute({ ticketId, assigneeId, assignedBy }) {
-    // Stub implementation for ticket assignment command
+    const updatedTicket = await this.ticketRepository.assign(ticketId, assigneeId, assignedBy);
+
+    if (this.notificationService) {
+      await this.notificationService.notifyUser(
+        assigneeId,
+        'Ticket Asignado',
+        `Se te ha asignado el ticket #${ticketId}`
+      );
+    }
+
     if (this.auditService) {
       await this.auditService.logAction(assignedBy, 'ASSIGN_TICKET', 'tickets', ticketId);
     }
-    return { ticketId, assigneeId, status: 'assigned' };
+
+    return updatedTicket;
   }
 }
 

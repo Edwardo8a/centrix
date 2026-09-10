@@ -40,6 +40,17 @@ class TicketRepository {
     if (error) throw error;
     return data;
   }
+
+  async assign(ticketId, assigneeId, assignedBy) {
+    const { data, error } = await supabase
+      .from('tickets')
+      .update({ assigned_to: assigneeId, updated_at: new Date() })
+      .eq('id', ticketId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
 }
 
 module.exports = TicketRepository;
