@@ -33,6 +33,12 @@ jobs:
       - name: Run TypeScript Type Check
         run: npm run type-check
 
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm test
+
       - name: Verify App Syntax Initialization
         run: |
           node -e "const app = require('./src/app'); console.log('CI verification: Express App initialized successfully');"
