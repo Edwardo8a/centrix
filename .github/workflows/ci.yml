@@ -34,4 +34,5 @@ jobs:
         run: npm run type-check
 
       - name: Verify App Syntax Initialization
-        run: node -e "const app = require('./src/app'); console.log('CI verification: Express App initialized successfully');"
+        run: |
+          node -e "const app = require('./src/app'); console.log('CI verification: Express App initialized successfully');"
