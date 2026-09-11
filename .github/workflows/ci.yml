@@ -25,13 +25,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Install Dependencies
         run: npm install
 
       - name: Run TypeScript Type Check
         run: npm run type-check
+
+      - name: Run Lint
+        run: npm run lint
+
+      - name: Run Tests
+        run: npm test
 
       - name: Verify App Syntax Initialization
         run: |
