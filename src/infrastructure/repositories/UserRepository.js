@@ -1,34 +1,43 @@
 const supabase = require('../db/supabaseClient');
 
 class UserRepository {
-  async findByEmail(email) {
+  // Ahora usamos el id devuelto por el Auth de Supabase
+  async findPersonaById(id) {
     const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
-  }
-
-  async findById(id) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
+      .from('personas')
+      .select(`
+        id,
+        nombre,
+        apellido_pat,
+        apellido_mat,
+        tel,
+        roles_personas (
+          roles (
+            descripcion
+          )
+        )
+      `)
       .eq('id', id)
       .single();
-    if (error) throw error;
-    return data;
-  }
-
-  async create(userData) {
-    const { data, error } = await supabase
-      .from('users')
-      .insert([userData])
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+      
+    if (error && error.code !== 'PGRST116') throw error;
+    
+    if (data) {
+      // Extraemos el listado de roles (si tiene varios, tomamos el primero o armamos un array)
+      const roles = data.roles_personas.map(rp => rp.roles.descripcion);
+      
+      return {
+        id: data.id,
+        nombre: data.nombre,
+        apellido_pat: data.apellido_pat,
+        apellido_mat: data.apellido_mat,
+        tel: data.tel,
+        role: roles[0] || 'sin_rol', // Asumimos un rol principal para el JWT
+        roles: roles // Por si quieres guardar todos los roles en el futuro
+      };
+    }
+    
+    return null;
   }
 }
 
