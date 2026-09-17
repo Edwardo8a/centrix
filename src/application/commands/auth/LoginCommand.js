@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../../../config/jwt');
 const BusinessError = require('../../../core/exceptions/BusinessError');
@@ -9,28 +8,42 @@ class LoginCommand {
   }
 
   async execute({ email, password }) {
-    const user = await this.userRepository.findByEmail(email);
+    // Validar las credenciales usando Supabase Auth
+    const supabase = require('../../../infrastructure/db/supabaseClient');
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw new BusinessError('Credenciales inválidas', 401);
+    }
+
+    // Traer los datos del usuario de la tabla "personas" usando el UUID devuelto por Supabase Auth
+    const user = await this.userRepository.findPersonaById(data.user.id);
     if (!user) {
-      throw new BusinessError('Credenciales inválidas', 401);
+      throw new BusinessError('Usuario no encontrado en la tabla de personas', 404);
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    if (!isValidPassword) {
-      throw new BusinessError('Credenciales inválidas', 401);
-    }
-
+    // Generar nuestro propio JWT con nuestra configuración
+    // Nota: Guardamos en el JWT el email de Supabase y el rol extraído de tu DB
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { id: user.id, email: email, role: user.role },
       jwtConfig.secret,
       { expiresIn: jwtConfig.expiresIn }
     );
 
+    // Concatenamos el nombre completo si es necesario
+    const fullName = `${user.nombre} ${user.apellido_pat} ${user.apellido_mat || ''}`.trim();
+
     return {
       user: {
         id: user.id,
-        email: user.email,
-        fullName: user.full_name,
-        role: user.role
+        email: email,
+        fullName: fullName,
+        role: user.role,
+        tel: user.tel
       },
       token
     };
