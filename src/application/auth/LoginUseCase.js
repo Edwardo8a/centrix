@@ -11,7 +11,7 @@ class LoginUseCase {
     //  Validar credenciales usando Supabase Auth
     const supabase = require('../../../infrastructure/db/supabaseClient');
 
-    const {data, error} = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -21,7 +21,7 @@ class LoginUseCase {
     }
     
     // Traer los Datos del Usuario de nuestra Base de Datos
-    const user = await this.userRepository.findByEmail(mail);
+    const user = await this.userRepository.findByEmail(email);
     if(!user){
       throw new BusinessError('Usuario no encontrado en la base de datos');
     }

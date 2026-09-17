@@ -7,7 +7,7 @@ class ValidateTokenUseCase {
     try {
       const decoded = jwt.verify(token, jwtConfig.secret);
       return decoded;
-    } catch (err) {
+    } catch {
       throw new BusinessError('Token inválido o expirado', 401);
     }
   }

@@ -41,7 +41,7 @@ class TicketRepository {
     return data;
   }
 
-  async assign(ticketId, assigneeId, assignedBy) {
+  async assign(ticketId, assigneeId) {
     const { data, error } = await supabase
       .from('tickets')
       .update({ assigned_to: assigneeId, updated_at: new Date() })
