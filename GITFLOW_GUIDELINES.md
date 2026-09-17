@@ -112,3 +112,47 @@ Se recomienda configurar las siguientes reglas en GitHub Repository Settings (`S
 2. **Rama `dev`**:
    - [x] Require a pull request before merging
    - [x] Require status checks to pass before merging
+
+## 5. Guía Práctica de Comandos (Paso a Paso)
+
+Si es tu primera vez usando este flujo, aquí tienes los comandos exactos que debes ejecutar en tu día a día:
+
+### Paso 1: Actualizar tu local antes de empezar
+Siempre asegúrate de tener la última versión antes de crear tu rama.
+\\\ash
+git checkout sprint
+git pull origin sprint
+\\\
+
+### Paso 2: Crear tu rama de trabajo
+Crea una rama para tu tarea (ej. un feature nuevo).
+\\\ash
+git checkout -b feature/mi-nueva-funcionalidad
+\\\
+
+### Paso 3: Guardar tus cambios (Commits)
+A medida que vayas programando, guarda tus cambios siguiendo la convención.
+\\\ash
+git add .
+git commit -m "feat(modulo): agregué la nueva funcionalidad"
+\\\
+
+### Paso 4: Subir tu rama a GitHub
+Cuando termines tu trabajo, súbelo a GitHub.
+\\\ash
+git push origin feature/mi-nueva-funcionalidad
+\\\
+
+### Paso 5: Crear el Pull Request (PR)
+1. Ve a GitHub a la pestaña de **Pull requests**.
+2. Dale a **New pull request**.
+3. En **base** selecciona sprint.
+4. En **compare** selecciona eature/mi-nueva-funcionalidad.
+5. Llena el título, dale a **Create pull request** y espera a que un compañero lo apruebe.
+
+### Paso 6: Actualizar dev y main (Solo administradores o encargados de release)
+Cuando el código de sprint ya esté probado y listo para unirse a desarrollo o producción, se hace mediante Pull Requests desde la web de GitHub:
+- **De sprint a dev:** Crea un PR con base dev y compare sprint.
+- **De dev a main:** Crea un PR con base main y compare dev.
+
+*(Nota: Gracias a las reglas de protección de GitHub, está estrictamente prohibido hacer git push origin dev o git push origin main directamente desde la consola).*
