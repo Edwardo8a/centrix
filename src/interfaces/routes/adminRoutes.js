@@ -11,5 +11,6 @@ router.use(roleCheck([UserRole.ADMINISTRADOR]));
 
 router.get('/reports', AdminController.getReports);
 router.get('/audit-logs', AdminController.getAuditLogs);
+router.post('/users', AdminController.createUser);
 
 module.exports = router;
