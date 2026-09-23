@@ -1,11 +1,12 @@
 const supabase = require('../db/supabaseClient');
 
 class UserRepository {
-  async create(userData) {
+  async create(userData, authId) {
     // 1. Insertar en la tabla personas
     const { data: persona, error: personaError } = await supabase
       .from('personas')
       .insert([{
+        id: authId,
         nombre: userData.nombre,
         apellido_pat: userData.apellido_pat,
         apellido_mat: userData.apellido_mat,
