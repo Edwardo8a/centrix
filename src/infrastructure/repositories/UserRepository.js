@@ -35,6 +35,35 @@ class UserRepository {
   }
 
   // Ahora usamos el id devuelto por el Auth de Supabase
+  async assignRoles(personaId, roleIds) {
+    // 1. Eliminar los roles actuales del usuario
+    const { error: deleteError } = await supabase
+      .from('roles_personas')
+      .delete()
+      .eq('id_persona', personaId);
+
+    if (deleteError) {
+      throw new Error(`Error al eliminar roles actuales: ${deleteError.message}`);
+    }
+
+    // 2. Preparar el array de nuevos roles a insertar
+    const newRoles = roleIds.map(roleId => ({
+      id_persona: personaId,
+      id_rol: roleId
+    }));
+
+    // 3. Insertar los nuevos roles
+    const { error: insertError } = await supabase
+      .from('roles_personas')
+      .insert(newRoles);
+
+    if (insertError) {
+      throw new Error(`Error al asignar los nuevos roles: ${insertError.message}`);
+    }
+
+    return true;
+  }
+
   async findPersonaById(id) {
     const { data, error } = await supabase
       .from('personas')

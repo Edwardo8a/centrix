@@ -23,6 +23,14 @@ class ManageUserCommand {
     // 2. Pasar el id de auth al repositorio para que lo guarde en "personas"
     return await this.userRepository.create(userData, authData.user.id);
   }
+async updateUserRoles(userId, roleIds) {
+    const BusinessError = require('../../../core/exceptions/BusinessError');
+    if (!Array.isArray(roleIds) || roleIds.length === 0) {
+      throw new BusinessError('Debe proporcionar al menos un ID de rol en formato de arreglo.', 400);
+    }
+    await this.userRepository.assignRoles(userId, roleIds);
+    return { id: userId, roles: roleIds };
+  }
 }
 
 module.exports = ManageUserCommand;

@@ -41,6 +41,17 @@ class AdminController {
       next(error);
     }
   }
+static async updateUserRoles(req, res, next) {
+    try {
+      const { userId } = req.params;
+      const { roles } = req.body;
+      
+      const result = await manageUserCommand.updateUserRoles(userId, roles);
+      return ResponseBuilder.success(res, result, 'Roles del usuario actualizados correctamente');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = AdminController;

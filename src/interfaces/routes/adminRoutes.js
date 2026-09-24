@@ -13,4 +13,6 @@ router.get('/reports', AdminController.getReports);
 router.get('/audit-logs', AdminController.getAuditLogs);
 router.post('/users', AdminController.createUser);
 
+router.put('/users/:userId/roles', AdminController.updateUserRoles);
+
 module.exports = router;
