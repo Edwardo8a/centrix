@@ -13,12 +13,14 @@ const createTicketCommand = new CreateTicketCommand({ ticketRepository, auditSer
 const updateTicketStatusCommand = new UpdateTicketStatusCommand({ ticketRepository, auditService });
 const assignTicketCommand = new AssignTicketCommand({ ticketRepository, auditService });
 
+
 class TicketCommandController {
+  // Este metodo extrae los parametros de req.body
   static async create(req, res, next) {
     try {
-      const { title, description, category } = req.body;
+      const { Titulo, Descripcion, Categoria, Prioridad, id_departamento } = req.body;
       const userId = req.user.id;
-      const ticket = await createTicketCommand.execute({ title, description, category, userId });
+      const ticket = await createTicketCommand.execute({ Titulo, Descripcion, Categoria, Prioridad, id_departamento, userId });
       return ResponseBuilder.success(res, ticket, 'Ticket creado exitosamente (ACID Command)', 201);
     } catch (error) {
       next(error);

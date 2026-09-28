@@ -7,17 +7,20 @@ class CreateTicketCommand {
     this.auditService = auditService;
   }
 
-  async execute({ title, description, category, userId }) {
-    const ticketEntity = new Ticket({ title, description, category, createdBy: userId });
+  async execute({ Titulo, Descripcion, Prioridad, id_departamento, userId }) {
+    // La entidad de Ticket recibe los parametros que son necesarios para la base de datos
+    const ticketEntity = new Ticket({ Titulo, Descripcion, Prioridad, id_departamento, createdBy: userId });
 
     // Intenta ejecutar vía función almacenada RPC para garantizar ACID estricto
     try {
       const { data, error } = await supabase.rpc('create_ticket_transaction', {
-        p_title: ticketEntity.title,
-        p_description: ticketEntity.description,
-        p_category: ticketEntity.category,
-        p_created_by: userId
+        p_Titulo: ticketEntity.Titulo,
+        p_Descripcion: ticketEntity.Descripcion,
+        p_Prioridad: ticketEntity.Prioridad,
+        p_id_departamento: ticketEntity.id_departamento,
+        p_id_creador: userId
       });
+
 
       if (!error && data) return data;
     } catch (rpcErr) {
@@ -26,11 +29,11 @@ class CreateTicketCommand {
 
     // Fallback a repositorio + servicio de auditoría
     const createdTicket = await this.ticketRepository.create({
-      title: ticketEntity.title,
-      description: ticketEntity.description,
-      category: ticketEntity.category,
-      status: ticketEntity.status,
-      created_by: userId
+      titulo: ticketEntity.Titulo,
+      descripcion: ticketEntity.Descripcion,
+      prioridad: ticketEntity.Prioridad,
+      id_departamento: ticketEntity.id_departamento,
+      id_creador: userId
     });
 
     if (this.auditService) {
