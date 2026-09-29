@@ -28,7 +28,6 @@ class TicketReadModel {
       ticketId: ticket.id,
       title: ticket.title,
       description: ticket.description,
-      category: ticket.category,
       status: ticket.status,
       createdAtIso: ticket.created_at,
       updatedAtIso: ticket.updated_at,
