@@ -3,28 +3,28 @@ const TicketStatus = require('../enums/TicketStatus');
 class Ticket {
   constructor({
     id,
-    Titulo,
-    Descripcion,
-    Prioridad,
-    id_departamento,
-    estado = TicketStatus.ABIERTO,
-    id_creador,
-    id_asignado = null,
-    notas_resolucion = null,
-    fecha_resolucion = null,
+    title,
+    description,
+    priority,
+    department_id,
+    status = TicketStatus.ABIERTO,
+    created_by,
+    assigned_to = null,
+    resolution_notes = null,
+    resolved_at = null,
     created_at,
     updated_at
   }) {
     this.id = id;
-    this.Titulo = Titulo;
-    this.Descripcion = Descripcion;
-    this.Prioridad = Prioridad;
-    this.id_departamento = id_departamento;
-    this.estado = estado;
-    this.id_creador = id_creador;
-    this.id_asignado = id_asignado;
-    this.notas_resolucion = notas_resolucion;
-    this.fecha_resolucion = fecha_resolucion;
+    this.title = title;
+    this.description = description;
+    this.priority = priority;
+    this.department_id = department_id;
+    this.status = status;
+    this.created_by = created_by;
+    this.assigned_to = assigned_to;
+    this.resolution_notes = resolution_notes;
+    this.resolved_at = resolved_at;
     this.created_at = created_at;
     this.updated_at = updated_at;
   }
