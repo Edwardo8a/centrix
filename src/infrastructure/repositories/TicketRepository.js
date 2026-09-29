@@ -21,6 +21,15 @@ class TicketRepository {
     return data;
   }
 
+  async findAllByDepartment(departmentId) {
+    const { data, error } = await supabase
+    .from('tickets')
+    .select('*')
+    .eq('department_id', departmentId);
+    if (error) throw error;
+    return data;
+  }
+
   async findByUser(userId) {
     const { data, error } = await supabase
       .from('tickets')
@@ -51,6 +60,8 @@ class TicketRepository {
     if (error) throw error;
     return data;
   }
+
+
 }
 
 module.exports = TicketRepository;

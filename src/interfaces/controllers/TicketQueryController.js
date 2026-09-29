@@ -1,14 +1,18 @@
 const GetTicketsByUserQuery = require('../../application/queries/tickets/GetTicketsByUserQuery');
 const GetTicketByIdQuery = require('../../application/queries/tickets/GetTicketByIdQuery');
 const GetPendingTicketsQuery = require('../../application/queries/tickets/GetPendingTicketsQuery');
+const GetAllTicketsQuery = require('../../application/queries/tickets/GetAllTicketsQuery');
 
 const TicketReadModel = require('../../infrastructure/read_models/TicketReadModel');
+const TicketRepository = require('../../infrastructure/repositories/TicketRepository');
 const ResponseBuilder = require('../../utils/responseBuilder');
 
 const ticketReadModel = new TicketReadModel();
+const ticketRepository = new TicketRepository();
 const getTicketsByUserQuery = new GetTicketsByUserQuery(ticketReadModel);
 const getTicketByIdQuery = new GetTicketByIdQuery(ticketReadModel);
 const getPendingTicketsQuery = new GetPendingTicketsQuery(ticketReadModel);
+const getAllTicketsQuery = new GetAllTicketsQuery(ticketRepository);
 
 class TicketQueryController {
   static async getMyTickets(req, res, next) {
@@ -35,6 +39,16 @@ class TicketQueryController {
     try {
       const viewModels = await getPendingTicketsQuery.execute();
       return ResponseBuilder.success(res, viewModels, 'Tickets pendientes obtenidos');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllTicketsByDepartment(req, res, next) {
+    try {
+      const { departmentId } = req.params;
+      const tickets = await getAllTicketsQuery.execute(departmentId);
+      return ResponseBuilder.success(res, tickets, 'Todos los tickets obtenidos del departamento');
     } catch (error) {
       next(error);
     }
