@@ -18,9 +18,9 @@ class TicketCommandController {
   // Este metodo extrae los parametros de req.body
   static async create(req, res, next) {
     try {
-      const { Titulo, Descripcion, Categoria, Prioridad, id_departamento } = req.body;
+      const { title, description, category, priority, department_id } = req.body;
       const userId = req.user.id;
-      const ticket = await createTicketCommand.execute({ Titulo, Descripcion, Categoria, Prioridad, id_departamento, userId });
+      const ticket = await createTicketCommand.execute({ title, description, category, priority, department_id, userId });
       return ResponseBuilder.success(res, ticket, 'Ticket creado exitosamente (ACID Command)', 201);
     } catch (error) {
       next(error);

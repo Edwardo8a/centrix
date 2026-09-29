@@ -14,6 +14,9 @@ router.use(authMiddleware);
 // --- READ QUERIES (Flutter ViewModels) ---
 router.get('/my-tickets', TicketQueryController.getMyTickets);
 router.get('/pending', roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]), TicketQueryController.getPending);
+//Endpoint para obtener todos los tickets por departamento
+router.get('/department/:departmentId', roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]), TicketQueryController.getAllTicketsByDepartment);
+
 router.get('/:ticketId', TicketQueryController.getById);
 
 // --- WRITE COMMANDS (ACID Mutations) ---
@@ -36,5 +39,6 @@ router.post(
   roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]),
   TicketCommandController.assign
 );
+
 
 module.exports = router;

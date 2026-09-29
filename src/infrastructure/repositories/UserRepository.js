@@ -2,12 +2,12 @@ const supabase = require('../db/supabaseClient');
 
 class UserRepository {
   async create(userData, authId) {
-    // 1. Insertar en la tabla personas
-    const { data: persona, error: personaError } = await supabase
-      .from('personas')
+    // 1. Insertar en la tabla users
+    const { data: userRecord, error: userError } = await supabase
+      .from('users')
       .insert([{
         id: authId,
-        nombre: userData.nombre,
+        full_name: userData.nombre,
         apellido_pat: userData.apellido_pat,
         apellido_mat: userData.apellido_mat,
         tel: userData.tel
@@ -15,36 +15,36 @@ class UserRepository {
       .select()
       .single();
 
-    if (personaError) {
-      throw new Error(`Error al crear la persona: ${personaError.message}`);
+    if (userError) {
+      throw new Error(`Error al crear el usuario: ${userError.message}`);
     }
 
-    // 2. Asignar el rol por defecto (ID 1) en roles_personas
+    // 2. Asignar el rol por defecto (ID 1) en user_roles
     const { error: rolError } = await supabase
-      .from('roles_personas')
+      .from('user_roles')
       .insert([{
-        id_persona: persona.id,
-        id_rol: 1
+        user_id: userRecord.id,
+        role_id: 1
       }]);
 
     if (rolError) {
       throw new Error(`Error al asignar el rol por defecto: ${rolError.message}`);
     }
 
-    return persona;
+    return userRecord;
   }
 
   // Ahora usamos el id devuelto por el Auth de Supabase
   async findPersonaById(id) {
     const { data, error } = await supabase
-      .from('personas')
+      .from('users')
       .select(`
         id,
-        nombre,
+        full_name,
         apellido_pat,
         apellido_mat,
         tel,
-        roles_personas (
+        user_roles (
           roles (
             descripcion
           )
@@ -57,11 +57,11 @@ class UserRepository {
     
     if (data) {
       // Extraemos el listado de roles (si tiene varios, tomamos el primero o armamos un array)
-      const roles = data.roles_personas.map(rp => rp.roles.descripcion);
+      const roles = data.user_roles.map(rp => rp.roles.descripcion);
       
       return {
         id: data.id,
-        nombre: data.nombre,
+        nombre: data.full_name, // Map back to 'nombre' for the LoginCommand
         apellido_pat: data.apellido_pat,
         apellido_mat: data.apellido_mat,
         tel: data.tel,
