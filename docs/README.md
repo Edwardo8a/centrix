@@ -11,7 +11,9 @@ docs/
 │
 ├── conexion-apis/           # Guias de consumo de endpoints HTTP para el equipo de Frontend
 │   ├── auth.md              # Inicio de sesion y obtencion de JWT (POST /api/auth/login)
+│   ├── tickets-crear.md     # Creacion de incidencias basicas HU-03 (POST /api/tickets)
 │   ├── tickets-estados.md   # Actualizacion de estado a En revision HU-05 (PATCH /api/tickets/:id/status)
+│   ├── admin-roles.md       # Asignacion de multiples roles a usuarios PPS-42 (PUT /api/admin/users/:id/roles)
 │   └── departamentos.md     # Catalogo de departamentos (GET /api/departments)
 │
 ├── flujos-http/             # Ruta paso a paso de como viaja la peticion desde el Frontend hasta la BD
