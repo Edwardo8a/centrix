@@ -172,7 +172,7 @@ El repositorio sigue un modelo de flujo de trabajo riguroso:
 
 ## 📡 Endpoints Principales API
 
-*(📘 Para entender a detalle cómo funciona nuestro sistema de Login entre Flutter, el Backend y Supabase, lee nuestra [Documentación del Flujo de Autenticación](docs/auth-flow.md))*
+*(📘 Para consultar guías de conexión de APIs, flujos HTTP, arquitectura CQRS y principios SOLID, revisa el [Índice de Documentación](docs/README.md) o la [Guía de Autenticación](docs/conexion-apis/auth.md))*
 
 | Método | Ruta | Descripción | Rol Requerido | Tipo CQRS |
 | :--- | :--- | :--- | :--- | :--- |

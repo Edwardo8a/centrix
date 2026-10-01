@@ -9,9 +9,12 @@ Este documento describe la organizacion de carpetas y archivos del backend, basa
 ```text
 centrixBack/
 │
-├── docs/                                  # Documentacion tecnica y guias de integracion
-│   ├── auth-flow.md                       # Flujo completo de autenticacion (Flutter + Backend + Supabase)
-│   └── api-tickets-estados.md             # Guia del endpoint de cambio de estado para Frontend (HU-05)
+├── docs/                                  # Documentacion tecnica organizada en cuatro carpetas tematicas
+│   ├── README.md                          # Indice principal y mapa general de documentacion
+│   ├── conexion-apis/                     # Guias tecnicas de integracion de endpoints para Frontend
+│   ├── flujos-http/                       # Rutas paso a paso de como viaja la peticion en cada modulo
+│   ├── cqrs/                              # Explicacion y aplicacion del patron CQRS por modulo
+│   └── solid/                             # Explicacion y cumplimiento de principios SOLID por modulo
 │
 ├── src/
 │   ├── app.js                             # Configuracion principal de Express y middlewares globales
@@ -111,4 +114,4 @@ Los archivos especificos donde reside tu funcionalidad desarrollada son:
 5. **Notificacion al Creador:** `src/infrastructure/services/NotificationService.js`
 6. **Validacion de Entrada:** `src/interfaces/validators/ticketValidator.js`
 7. **Pruebas Automatizadas:** `src/__tests__/UpdateTicketStatus.test.js`
-8. **Documentacion para Frontend:** `docs/api-tickets-estados.md`
+8. **Documentacion para Frontend:** `docs/conexion-apis/tickets-estados.md`
