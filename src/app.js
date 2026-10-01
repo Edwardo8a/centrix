@@ -8,6 +8,7 @@ const authRoutes = require('./interfaces/routes/authRoutes');
 const ticketRoutes = require('./interfaces/routes/ticketRoutes');
 const expenseRoutes = require('./interfaces/routes/expenseRoutes');
 const adminRoutes = require('./interfaces/routes/adminRoutes');
+const departmentRoutes = require('./interfaces/routes/departmentRoutes');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/departments', departmentRoutes);
 
 // Global Error Handler Middleware
 app.use(errorHandler);
