@@ -1,7 +1,6 @@
 require('dotenv').config();
 const app = require('./src/app');
-const supabase = require('./src/config/supabaseClient');
-
+const { dataClient: supabase } = require('./src/config/supabaseClient');
 const PORT = process.env.PORT || 3000;
 
 async function startServer() {

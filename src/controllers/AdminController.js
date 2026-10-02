@@ -1,30 +1,20 @@
-const UserRepository = require('../repositories/UserRepository');
-const ManageUserCommand = require('../commands/admin/ManageUserCommand');
+const CreateUserCommand = require('../commands/admin/CreateUserCommand');
+const { createUserHandler } = require('../config/container');
 const ResponseBuilder = require('../utils/responseBuilder');
 
-const userRepository = new UserRepository();
-const manageUserCommand = new ManageUserCommand(userRepository);
-
 class AdminController {
-  // HU-11: Crear usuario en Auth y tabla personas/users
   static async createUser(req, res, next) {
     try {
-      const userData = req.body;
-      const newUser = await manageUserCommand.createUser(userData);
-      return ResponseBuilder.success(res, newUser, 'Usuario creado correctamente', 201);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // HU-12 / PPS-42: Asignar multiples roles a un usuario
-  static async updateUserRoles(req, res, next) {
-    try {
-      const { userId } = req.params;
-      const { roles } = req.body;
-
-      const result = await manageUserCommand.updateUserRoles(userId, roles);
-      return ResponseBuilder.success(res, result, 'Roles del usuario actualizados correctamente');
+      const command = new CreateUserCommand({
+        email: req.body.email,
+        password: req.body.password,
+        nombre: req.body.nombre,
+        apellido_pat: req.body.apellido_pat,
+        apellido_mat: req.body.apellido_mat,
+        tel: req.body.tel
+      });
+      const result = await createUserHandler.handle(command);
+      return ResponseBuilder.success(res, result, 'Usuario creado correctamente', 201);
     } catch (error) {
       next(error);
     }
