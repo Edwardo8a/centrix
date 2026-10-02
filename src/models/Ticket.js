@@ -1,32 +1,36 @@
-const TicketStatus = require('../enums/TicketStatus');
+const ValidationError = require('../exceptions/ValidationError');
 
 class Ticket {
   constructor({
-    id,
     title,
     description,
     priority,
     department_id,
-    status = TicketStatus.ABIERTO,
     created_by,
-    assigned_to = null,
-    resolution_notes = null,
-    resolved_at = null,
-    created_at,
-    updated_at
+    status = 'Abierto'
   }) {
-    this.id = id;
-    this.title = title;
-    this.description = description;
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      throw new ValidationError('El título es obligatorio', 400);
+    }
+    if (!description || typeof description !== 'string' || !description.trim()) {
+      throw new ValidationError('La descripción es obligatoria', 400);
+    }
+    if (!priority || !['Baja', 'Media', 'Alta', 'Critica'].includes(priority)) {
+      throw new ValidationError('La prioridad debe ser Baja, Media, Alta o Critica', 400);
+    }
+    if (!department_id) {
+      throw new ValidationError('El departamento es obligatorio', 400);
+    }
+    if (!created_by) {
+      throw new ValidationError('El creador es obligatorio', 400);
+    }
+
+    this.title = title.trim();
+    this.description = description.trim();
     this.priority = priority;
     this.department_id = department_id;
     this.status = status;
     this.created_by = created_by;
-    this.assigned_to = assigned_to;
-    this.resolution_notes = resolution_notes;
-    this.resolved_at = resolved_at;
-    this.created_at = created_at;
-    this.updated_at = updated_at;
   }
 }
 

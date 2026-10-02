@@ -1,10 +1,13 @@
 class GetAllDepartmentsQuery {
-  constructor({ departmentRepository }) {
-    this.departmentRepository = departmentRepository;
+  /**
+   * @param {{ departmentReadModel: import('../../contracts').IDepartmentReadModel }} deps
+   */
+  constructor({ departmentReadModel }) {
+    this.departmentReadModel = departmentReadModel;
   }
 
   async execute() {
-    return await this.departmentRepository.getAllDepartments();
+    return await this.departmentReadModel.getAll();
   }
 }
 
