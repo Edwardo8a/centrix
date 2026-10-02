@@ -1,5 +1,5 @@
-const ManageUserCommand = require('../application/commands/admin/ManageUserCommand');
-const BusinessError = require('../core/exceptions/BusinessError');
+const ManageUserCommand = require('../commands/admin/ManageUserCommand');
+const BusinessError = require('../exceptions/BusinessError');
 
 // Mock del repositorio
 const mockUserRepository = {

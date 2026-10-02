@@ -8,20 +8,22 @@ El modulo de tickets es el ejemplo mas completo de la aplicacion del patron CQRS
 
 ```text
                                MODULO TICKETS
-                                     │
-             ┌───────────────────────┴───────────────────────┐
-             ▼                                               ▼
-       LADO COMMAND (ESCRITURA)                        LADO QUERY (LECTURA)
-   TicketCommandController.js                       TicketQueryController.js
-             │                                               │
-             ├─► CreateTicketCommand                         ├─► GetTicketsByUserQuery
-             ├─► UpdateTicketStatusCommand                   ├─► GetPendingTicketsQuery
-             └─► AssignTicketCommand                         └─► GetAllTicketsByDepartmentQuery
-             │                                               │
-             ▼                                               ▼
-    TicketRepository.js                              TicketReadModel.js
-   (Escribe en tickets y                            (Consultas optimizadas para
-  ticket_status_history)                              ViewModels de Flutter)
+                                     |
+             +-----------------------+-----------------------+
+             |                                               |
+             v                                               v
+   LADO COMMAND (ESCRITURA)                        LADO QUERY (LECTURA)
+ src/controllers/TicketCommandController.js     src/controllers/TicketQueryController.js
+             |                                               |
+             |-- CreateTicketCommand                         |-- GetTicketsByUserQuery
+             |-- UpdateTicketStatusCommand                   |-- GetPendingTicketsQuery
+             `-- AssignTicketCommand                         |-- GetTicketByIdQuery
+             |                                               `-- GetAllTicketsQuery
+             v                                               |
+  src/repositories/TicketRepository.js                       v
+ (Escribe en tickets y                          src/repositories/TicketReadModel.js
+  ticket_status_history)                        (Consultas optimizadas para
+                                                 pantallas de Flutter)
 ```
 
 ---
@@ -31,41 +33,22 @@ El modulo de tickets es el ejemplo mas completo de la aplicacion del patron CQRS
 Los comandos se enfocan en la consistencia de datos y la aplicacion estricta de reglas de negocio:
 
 ### Casos de Uso Implementados:
-- **`CreateTicketCommand.js`:** Registra un nuevo ticket, valida departamento y prioridad, e intenta ejecutar transacciones ACID mediante procedimientos almacenados (RPC) con respaldo a repositorio.
+- **`CreateTicketCommand.js` (HU-03):** Registra un nuevo ticket, valida departamento y prioridad, e interactua con `TicketRepository`.
 - **`UpdateTicketStatusCommand.js` (HU-05):**
   - Valida que el ticket exista y que el estado solicitado sea valido.
   - Impide transiciones imposibles (ej. reabrir tickets cerrados).
   - Modifica la tabla principal `tickets`.
   - Inserta el registro en la tabla de trazabilidad `ticket_status_history`.
   - Dispara la notificacion al creador de la incidencia mediante `NotificationService`.
-- **`AssignTicketCommand.js`:** Asigna un responsable tecnico y registra el cambio en la auditoria general.
+- **`AssignTicketCommand.js`:** Asigna un responsable a una incidencia y emite aviso.
 
 ---
 
-## 3. El Lado Query (Consultas y Read Models)
+## 3. El Lado Query (Consultas de Lectura)
 
-Las consultas se enfocan en la velocidad de renderizado de la aplicacion movil en Flutter:
+Las consultas no modifican ningun dato en la base de datos; su objetivo es recuperar informacion lista para ser consumida:
 
-### Casos de Uso Implementados:
-- **`GetTicketsByUserQuery.js`:** Retorna la lista de tickets que pertenecen al usuario en sesion.
-- **`GetPendingTicketsQuery.js`:** Retorna los tickets con estado `Abierto` o `En revision` para la bandeja de trabajo de gerencia y soporte.
-- **`GetAllTicketsByDepartmentQuery.js`:** Retorna incidencias agrupadas por area.
-
-### El Rol de `TicketReadModel.js`:
-En lugar de devolver el modelo crudo de la base de datos (con nombres de tablas o formatos confusos), `TicketReadModel` mapea los resultados directamente a los DTOs que esperan los ViewModels de Flutter:
-
-```javascript
-// TicketReadModel proyecta directamente el DTO para Flutter TicketListViewModel:
-return data.map(ticket => ({
-  ticketId: ticket.id,
-  title: ticket.title,
-  description: ticket.description,
-  status: ticket.status,
-  createdAtIso: ticket.created_at,
-  updatedAtIso: ticket.updated_at,
-  authorName: ticket.creator ? ticket.creator.full_name : 'Desconocido',
-  assignedToName: ticket.assignee ? ticket.assignee.full_name : 'Sin asignar'
-}));
-```
-
-Con esto, la aplicacion movil recibe exactamente las propiedades listas para pintar en pantalla sin tener que hacer calculos o concatenaciones en el dispositivo.
+- **`GetAllTicketsQuery.js`:** Obtiene todos los tickets asociados a un departamento especifico.
+- **`GetTicketsByUserQuery.js`:** Retorna los tickets reportados por el usuario autenticado.
+- **`GetPendingTicketsQuery.js`:** Filtra tickets en estado Abierto y En revision para la cola de atencion.
+- **`GetTicketByIdQuery.js`:** Obtiene la ficha detallada de una incidencia.

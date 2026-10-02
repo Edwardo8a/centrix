@@ -1,6 +1,6 @@
-const UpdateTicketStatusCommand = require('../application/commands/tickets/UpdateTicketStatusCommand');
-const BusinessError = require('../core/exceptions/BusinessError');
-const { TicketStatus } = require('../core/enums/TicketStatus');
+const UpdateTicketStatusCommand = require('../commands/tickets/UpdateTicketStatusCommand');
+const BusinessError = require('../exceptions/BusinessError');
+const { TicketStatus } = require('../enums/TicketStatus');
 
 describe('HU-05: Actualizacion de estados de tickets (PPS-90 y PPS-91)', () => {
   let mockTicketRepository;
