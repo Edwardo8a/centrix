@@ -14,8 +14,8 @@ class TicketReadModel {
         status,
         department_id,
         created_at,
-        creator:created_by (id, full_name),
-        assignee:assigned_to (id, full_name)
+        creator:users!fk_tickets_created_by (id, full_name),
+        assignee:users!fk_tickets_assigned_to (id, full_name)
       `)
       .eq('department_id', departmentId)
       .order('created_at', { ascending: false });
