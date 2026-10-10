@@ -9,8 +9,42 @@
     "dev:ts": "tsx watch server.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "jest",
+    "test": "jest --coverage",
+    "sonar": "sonar-scanner-npm",
     "build": "tsc"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/__tests__/**",
+      "!**/node_modules/**"
+    ],
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/server.js",
+      "<rootDir>/src/config/supabaseClient.js",
+      "<rootDir>/src/config/container.js",
+      "<rootDir>/src/contracts/index.js"
+    ],
+    "coverageReporters": [
+      "lcov",
+      "text"
+    ],
+    "reporters": [
+      "default",
+      [
+        "jest-html-reporter",
+        {
+          "pageTitle": "Reporte de pruebas - Centrix",
+          "outputPath": "reports/test-report.html"
+        }
+      ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 80
+      }
+    }
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -28,6 +62,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@sonar/scan": "^5.0.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -39,6 +74,7 @@
     "@types/nodemailer": "^6.4.14",
     "eslint": "^10.10.0",
     "jest": "^29.7.0",
+    "jest-html-reporter": "^4.4.2",
     "nodemon": "^3.0.1",
     "supertest": "^7.2.2",
     "tsx": "^4.7.0",

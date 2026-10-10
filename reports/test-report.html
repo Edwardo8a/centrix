@@ -1,0 +1,277 @@
+<html><head><meta charset="utf-8"/><title>Reporte de pruebas - Centrix</title><style type="text/css">:root {
+  --text-primary: #111;
+  --text-secondary: #4f4f4f;
+  --success: #006633;
+  --success-bright: #80ffbf;
+  --danger: #cc071e;
+  --danger-bright: #fbdfe0;
+  --warning: #995c00;
+  --warning-bright: #ffeea8;
+  --panel: #eee;
+  --border: #949494;
+  --disabled: #6b6b6b;
+}
+
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+}
+body {
+  padding: 2rem 1rem;
+}
+.jesthtml-content {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+#title {
+  margin: 0;
+  flex-grow: 1;
+}
+#logo {
+  height: 4rem;
+}
+#timestamp {
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+#metadata-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.additional-information-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+/** SUMMARY */
+#summary {
+  color: var(--text-primary);
+  display: flex;
+  font-family: monospace;
+  font-size: 1rem;
+}
+#summary > div {
+  margin-right: 0.5rem;
+  background: var(--panel);
+  padding: 1rem;
+  min-width: 15rem;
+}
+#summary > div:last-child {
+  margin-right: 0;
+}
+@media only screen and (max-width: 720px) {
+  #summary {
+    flex-direction: column;
+  }
+  #summary > div {
+    margin-right: 0;
+    margin-top: 1rem;
+  }
+  #summary > div:first-child {
+    margin-top: 0;
+  }
+}
+
+.summary-total {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.summary-passed {
+  color: var(--success);
+  border-left: 0.4rem solid var(--success);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-failed,
+.summary-obsolete-snapshots {
+  color: var(--danger);
+  border-left: 0.4rem solid var(--danger);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-pending {
+  color: var(--warning);
+  border-left: 0.4rem solid var(--warning);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-empty {
+  color: var(--disabled);
+  border-left: 0.4rem solid var(--disabled);
+  margin-bottom: 0.15rem;
+}
+
+.test-result {
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+}
+.test-result:last-child {
+  border: 0;
+}
+.test-result.passed {
+  background-color: var(--success-bright);
+  color: var(--success);
+}
+.test-result.failed {
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.test-result.pending {
+  background-color: var(--warning-bright);
+  color: var(--warning);
+}
+
+.test-info {
+  display: flex;
+  justify-content: space-between;
+}
+.test-suitename {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
+  word-break: break-word;
+}
+.test-title {
+  width: 40%;
+  text-align: left;
+  font-style: italic;
+}
+.test-status {
+  width: 20%;
+  text-align: right;
+}
+.test-duration {
+  width: 10%;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.failureMessages {
+  padding: 0 1rem;
+  margin-top: 1rem;
+  border-top: 1px dashed var(--danger);
+}
+.failureMessages.suiteFailure {
+  border-top: none;
+}
+.failureMsg {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.suite-container {
+  margin-bottom: 1rem;
+}
+.suite-info {
+  padding: 1rem;
+  background-color: var(--panel);
+  color: var(--text-secondary);
+  border: 0.15rem solid;
+  border-color: var(--panel);
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.suite-info:hover {
+  border-color: var(--border);
+  cursor: pointer;
+}
+.suite-info .suite-path {
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: 1rem;
+}
+.suite-info .suite-time {
+  margin-left: 1rem;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+}
+.suite-info .suite-time.warn {
+  background-color: var(--danger);
+  color: #fff;
+}
+.suite-info:before {
+  content: "\2303";
+  display: inline-block;
+  margin-right: 1rem;
+  transform: rotate(180deg) translateY(0.15rem);
+}
+.suite-container[open] .suite-info:before {
+  transform: rotate(0deg) translateY(0.15rem);
+}
+
+/* CONSOLE LOGS */
+.suite-consolelog {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--panel);
+}
+.suite-consolelog-header {
+  font-weight: bold;
+}
+.suite-consolelog-item {
+  padding: 0.5rem;
+}
+.suite-consolelog-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-consolelog-item-origin {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+.suite-consolelog-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+
+/* OBSOLETE SNAPSHOTS */
+.suite-obsolete-snapshots {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.suite-obsolete-snapshots-header {
+  font-weight: bold;
+}
+.suite-obsolete-snapshots-item {
+  padding: 0.5rem;
+}
+.suite-obsolete-snapshots-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-obsolete-snapshots-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+</style></head><body><main class="jesthtml-content"><header><h1 id="title">Reporte de pruebas - Centrix</h1></header><section id="metadata-container"><div id="timestamp">Started: 2026-10-02 19:11:55</div><div id="summary"><div id="suite-summary"><div class="summary-total">Suites (21)</div><div class="summary-passed ">21 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div><div id="test-summary"><div class="summary-total">Tests (58)</div><div class="summary-passed ">58 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div></div></section><details id="suite-1" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\ValidationError.test.js</div><div class="suite-time">1.732s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationError</div><div class="test-title">debe crear con string por defecto</div><div class="test-status">passed</div><div class="test-duration">0.039s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ValidationError</div><div class="test-title">debe crear con array de errores y statusCode opcional</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-2" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\TicketStatus.test.js</div><div class="suite-time">1.726s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">TicketStatus Enum</div><div class="test-title">debe retornar null si se pasa valor invalido a normalizeTicketStatus</div><div class="test-status">passed</div><div class="test-duration">0.034s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">TicketStatus Enum</div><div class="test-title">debe normalizar diferentes valores correctamente</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div></div></details><details id="suite-3" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\responseBuilder.test.js</div><div class="suite-time">1.723s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ResponseBuilder</div><div class="test-title">debe retornar respuesta success con parametros por defecto</div><div class="test-status">passed</div><div class="test-duration">0.015s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ResponseBuilder</div><div class="test-title">debe retornar respuesta success con parametros provistos</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ResponseBuilder</div><div class="test-title">debe retornar respuesta error con parametros por defecto</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ResponseBuilder</div><div class="test-title">debe retornar respuesta error con parametros provistos</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-4" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\Department.test.js</div><div class="suite-time">1.703s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Department Model</div><div class="test-title">debe crear un departamento con sus propiedades</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div></div></details><details id="suite-5" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\logger.test.js</div><div class="suite-time">1.748s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">logger</div><div class="test-title">debe registrar info</div><div class="test-status">passed</div><div class="test-duration">0.016s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">logger</div><div class="test-title">debe registrar error</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">logger</div><div class="test-title">debe registrar warn</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-6" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\Ticket.test.js</div><div class="suite-time">1.736s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Ticket Model</div><div class="test-title">debe lanzar ValidationError si falta la descripcion</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Ticket Model</div><div class="test-title">debe lanzar ValidationError si falta el departamento</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-7" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\BusinessError.test.js</div><div class="suite-time">1.725s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">BusinessError</div><div class="test-title">debe crear el error con mensaje y status por defecto</div><div class="test-status">passed</div><div class="test-duration">0.016s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">BusinessError</div><div class="test-title">debe crear el error con status provisto</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-8" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\User.test.js</div><div class="suite-time">1.791s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">User Model</div><div class="test-title">debe crear un usuario y validar si es admin</div><div class="test-status">passed</div><div class="test-duration">0.013s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">User Model</div><div class="test-title">debe crear un usuario y validar si es gerente</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-9" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\auth.middleware.test.js</div><div class="suite-time">1.948s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">authMiddleware</div><div class="test-title">debe retornar error si no hay token proporcionado</div><div class="test-status">passed</div><div class="test-duration">0.026s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">authMiddleware</div><div class="test-title">debe retornar error si el token no es Bearer</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">authMiddleware</div><div class="test-title">debe retornar error si el token es invalido</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">authMiddleware</div><div class="test-title">debe llamar next y setear req.user si el token es valido</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-10" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\errorHandler.middleware.test.js</div><div class="suite-time">0.281s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">errorHandler</div><div class="test-title">debe manejar errores con statusCode, message y errors definidos</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">errorHandler</div><div class="test-title">debe manejar errores sin propiedades definidas usando valores por defecto</div><div class="test-status">passed</div><div class="test-duration">0.007s</div></div></div></div></details><details id="suite-11" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\validatorHelpers.test.js</div><div class="suite-time">2.031s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">validatorHelpers</div><div class="test-title">debe llamar a next sin errores si validationResult esta vacio</div><div class="test-status">passed</div><div class="test-duration">0.015s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">validatorHelpers</div><div class="test-title">debe llamar a next con Error si hay errores de validacion</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-12" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\AuthService.test.js</div><div class="suite-time">0.281s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe lanzar BusinessError si las credenciales en signIn son invalidas</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe retornar authId al hacer signIn con credenciales validas</div><div class="test-status">passed</div><div class="test-duration">0.007s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe lanzar BusinessError si falla al crear usuario en signUp</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe retornar authId al hacer signUp con credenciales validas</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe lanzar BusinessError cuando signUp devuelve datos sin usuario</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe lanzar BusinessError si adminClient no esta configurado al eliminar usuario</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe lanzar BusinessError si falla al eliminar usuario</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthService</div><div class="test-title">debe eliminar usuario exitosamente</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-13" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\LoginHandler.test.js</div><div class="suite-time">0.249s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">LoginHandler</div><div class="test-title">debe omitir los apellidos en fullName si no existen</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">LoginHandler</div><div class="test-title">debe incluir ambos apellidos si existen</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div></div></details><details id="suite-14" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\src\__tests__\LoginHandler.test.js</div><div class="suite-time">0.332s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">LoginHandler</div><div class="test-title">debe devolver { user, token } cuando todo es válido</div><div class="test-status">passed</div><div class="test-duration">0.006s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">LoginHandler</div><div class="test-title">debe lanzar BusinessError 401 si las credenciales son inválidas y no llamar al userRepository</div><div class="test-status">passed</div><div class="test-duration">0.014s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">LoginHandler</div><div class="test-title">debe lanzar BusinessError 404 si el usuario existe en Auth pero no en la tabla users</div><div class="test-status">passed</div><div class="test-duration">0.007s</div></div></div></div></details><details id="suite-15" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\src\__tests__\CreateTicketHandler.test.js</div><div class="suite-time">0.364s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateTicketHandler</div><div class="test-title">debe devolver el id del ticket cuando todo es válido</div><div class="test-status">passed</div><div class="test-duration">0.008s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateTicketHandler</div><div class="test-title">debe lanzar ValidationError y no llamar al repositorio si la prioridad es inválida</div><div class="test-status">passed</div><div class="test-duration">0.066s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateTicketHandler</div><div class="test-title">debe lanzar ValidationError y no llamar al repositorio si falta el título</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateTicketHandler</div><div class="test-title">debe lanzar ValidationError y no llamar al repositorio si falta el creador</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-16" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\TokenService.test.js</div><div class="suite-time">0.394s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">TokenService</div><div class="test-title">debe generar un token correctamente</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div></div></details><details id="suite-17" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\tests\roleCheck.middleware.test.js</div><div class="suite-time">0.382s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleCheck</div><div class="test-title">debe retornar error si no hay req.user</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleCheck</div><div class="test-title">debe retornar error si el usuario no tiene roles definidos (linea 13)</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleCheck</div><div class="test-title">debe retornar error si el rol no esta permitido (array roles)</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleCheck</div><div class="test-title">debe retornar error si el rol simple no esta permitido</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">roleCheck</div><div class="test-title">debe permitir si coincide el rol (ignora mayusculas)</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-18" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\src\__tests__\CreateUserHandler.test.js</div><div class="suite-time">0.392s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateUserHandler</div><div class="test-title">debe devolver { id } y no llamar a deleteUser si todo es exitoso</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateUserHandler</div><div class="test-title">debe llamar a deleteUser y relanzar el error si userRepository.create falla</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateUserHandler</div><div class="test-title">no debe llamar a userRepository si authService.signUp falla</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateUserHandler</div><div class="test-title">debe relanzar el error original incluso si deleteUser también falla</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-19" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\src\__tests__\GetTicketsByDepartmentQuery.test.js</div><div class="suite-time">0.177s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">GetTicketsByDepartmentQuery</div><div class="test-title">debe devolver la lista que entrega el ReadModel</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">GetTicketsByDepartmentQuery</div><div class="test-title">debe devolver [] cuando no hay tickets</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-20" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\src\__tests__\GetAllDepartmentsQuery.test.js</div><div class="suite-time">0.164s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">GetAllDepartmentsQuery</div><div class="test-title">debe devolver la lista que entrega el ReadModel</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">GetAllDepartmentsQuery</div><div class="test-title">debe devolver [] cuando no hay departamentos</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-21" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\kens\Desktop\Centrix\centrix\src\__tests__\app.test.js</div><div class="suite-time">2.952s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">App Integration</div><div class="test-title">debe retornar 200 en el endpoint /health</div><div class="test-status">passed</div><div class="test-duration">0.023s</div></div></div></div></details></main></body></html>

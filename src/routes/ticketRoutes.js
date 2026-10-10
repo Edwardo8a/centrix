@@ -1,14 +1,17 @@
 const express = require('express');
 const { param } = require('express-validator');
-const TicketCommandController = require('../controllers/TicketCommandController');
+const ticketCommandControllerFactory = require('../controllers/TicketCommandController');
 const TicketQueryController = require('../controllers/TicketQueryController');
 const authMiddleware = require('../middlewares/auth');
 const roleCheck = require('../middlewares/roleCheck');
 const UserRole = require('../enums/UserRole');
 const { ticketValidator } = require('../validators/ticketValidator');
 const { validateResult } = require('../utils/validatorHelpers');
+const { createTicketHandler } = require('../config/container');
 
 const router = express.Router();
+const ticketCommandController = ticketCommandControllerFactory({ createTicketHandler });
+
 
 router.use(authMiddleware);
 
@@ -28,7 +31,7 @@ router.post(
   roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR]),
   ticketValidator,
   validateResult,
-  TicketCommandController.create
+  ticketCommandController.create
 );
 
 module.exports = router;

@@ -1,10 +1,9 @@
 const CreateTicketCommand = require('../commands/tickets/CreateTicketCommand');
-const { createTicketHandler } = require('../config/container');
 const ResponseBuilder = require('../utils/responseBuilder');
 
-class TicketCommandController {
+const ticketCommandControllerFactory = ({ createTicketHandler }) => ({
   // Maneja la creacion de tickets (HU-03)
-  static async create(req, res, next) {
+  create: async (req, res, next) => {
     try {
       const command = new CreateTicketCommand({
         title: req.body.title,
@@ -20,6 +19,6 @@ class TicketCommandController {
       next(error);
     }
   }
-}
+});
 
-module.exports = TicketCommandController;
+module.exports = ticketCommandControllerFactory;
