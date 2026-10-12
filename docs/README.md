@@ -9,7 +9,7 @@ Bienvenido a la documentacion tecnica y arquitectonica del backend de Centrix. L
 ```text
 docs/
 |-- README.md                    # Indice principal y mapa general de documentacion
-|-- SOLID.md                     # Resumen de cumplimiento de principios SOLID
+|-- SOLID.md                     # Resumen y matriz de cumplimiento de principios SOLID
 |
 |-- conexion-apis/               # Guias tecnicas de consumo de endpoints para Frontend
 |   |-- auth.md                  # Inicio de sesion (POST /api/auth/login)
@@ -18,8 +18,9 @@ docs/
 |   |-- departamentos.md         # Catalogo de departamentos HU-13 (GET /api/departments)
 |   `-- admin-usuarios.md        # Registro de usuarios por administrador HU-11 (POST /api/admin/users)
 |
-|-- flujos-http/                 # Ruta paso a paso de como viaja la peticion HTTP
-|   |-- flujo-auth.md            # Ciclo de vida completo del login (Controller -> Handler -> Service)
+|-- flujos-http/                 # Ruta paso a paso End-to-End (Frontend Flutter + Backend CQRS)
+|   |-- flujo-auth.md            # Ciclo de vida completo del login (View -> ViewModel -> Handler -> Service)
+|   |-- flujo-admin-usuarios.md  # Ciclo de vida completo de creacion de usuarios (Admin View -> Handler -> Supabase)
 |   |-- flujo-tickets-crear.md   # Ciclo de vida completo de creacion de tickets
 |   `-- flujo-tickets-consulta.md# Ciclo de vida de consulta de tickets por departamento
 |
@@ -51,7 +52,7 @@ docs/
 ## 3. Guias Rapidas por Rol
 
 - **Desarrollador Frontend (Flutter / Web):**  
-  Revisa la carpeta `docs/conexion-apis/` para conocer cabeceras, JSONs de peticion, validaciones y ejemplos listos en Dart.
+  Revisa la carpeta `docs/conexion-apis/` para conocer cabeceras, JSONs de peticion, validaciones y ejemplos listos en Dart, asi como `docs/flujos-http/` para ver la integracion MVVM completa.
 - **Desarrollador Backend & DevOps:**  
   Revisa `docs/flujos-http/` y `docs/SOLID.md` para entender el ensamblaje en `src/config/container.js`, la inyeccion de dependencias y el manejo de errores.
 - **Diseno y Buenas Practicas:**  
