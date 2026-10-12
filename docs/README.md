@@ -1,42 +1,58 @@
 # Indice de Documentacion Tecnica - Centrix Backend
 
-Bienvenido a la documentacion tecnica y arquitectonica del backend de Centrix. La documentacion esta dividida en cuatro carpetas tematicas, organizadas por modulos funcionales bajo la arquitectura CQRS.
+Bienvenido a la documentacion tecnica y arquitectonica del backend de Centrix. La documentacion esta organizada por modulos y temas para facilitar su consulta y mantenimiento bajo la arquitectura **CQRS (Command Query Responsibility Segregation)** y los principios **SOLID**.
 
 ---
 
-## Estructura de la Documentacion
+## 1. Estructura de la Documentacion
 
 ```text
 docs/
-|-- conexion-apis/           # Guias de consumo de endpoints HTTP para el equipo de Frontend
-|   |-- auth.md              # Inicio de sesion y obtencion de JWT (POST /api/auth/login)
-|   |-- tickets-crear.md     # Creacion de incidencias basicas HU-03 (POST /api/tickets)
-|   |-- tickets-estados.md   # Actualizacion de estado a En revision HU-05 (PATCH /api/tickets/:id/status)
-|   |-- admin-roles.md       # Asignacion de multiples roles a usuarios PPS-42 (PUT /api/admin/users/:id/roles)
-|   `-- departamentos.md     # Catalogo de departamentos (GET /api/departments)
+|-- README.md                    # Indice principal y mapa general de documentacion
+|-- SOLID.md                     # Resumen de cumplimiento de principios SOLID
 |
-|-- flujos-http/             # Ruta paso a paso de como viaja la peticion desde el Frontend hasta la BD
-|   |-- flujo-auth.md        # Ciclo de vida completo del inicio de sesion
-|   `-- flujo-tickets.md     # Ciclo de vida completo del cambio de estado de tickets (HU-05)
+|-- conexion-apis/               # Guias tecnicas de consumo de endpoints para Frontend
+|   |-- auth.md                  # Inicio de sesion (POST /api/auth/login)
+|   |-- tickets-crear.md         # Creacion basica de incidencias HU-03 (POST /api/tickets)
+|   |-- tickets-departamento.md  # Consulta de tickets por departamento (GET /api/tickets/department/:id)
+|   |-- departamentos.md         # Catalogo de departamentos HU-13 (GET /api/departments)
+|   `-- admin-usuarios.md        # Registro de usuarios por administrador HU-11 (POST /api/admin/users)
 |
-|-- cqrs/                    # Separacion de Comandos (Escritura) y Consultas (Lectura) por modulo
-|   |-- cqrs-explicacion.md  # Fundamentos del patron CQRS y por que se aplica
-|   |-- cqrs-auth.md         # Como se aplica CQRS en Autenticacion (LoginCommand)
-|   `-- cqrs-tickets.md      # Como se aplica CQRS en Tickets (Commands vs ReadModels)
+|-- flujos-http/                 # Ruta paso a paso de como viaja la peticion HTTP
+|   |-- flujo-auth.md            # Ciclo de vida completo del login (Controller -> Handler -> Service)
+|   |-- flujo-tickets-crear.md   # Ciclo de vida completo de creacion de tickets
+|   `-- flujo-tickets-consulta.md# Ciclo de vida de consulta de tickets por departamento
 |
-`-- solid/                   # Aplicacion de los 5 principios SOLID por modulo
-    |-- solid-explicacion.md # Definicion teorica de los principios S, O, L, I, D
-    |-- solid-auth.md        # Desglose de SOLID en el flujo de inicio de sesion
-    `-- solid-tickets.md     # Desglose de SOLID en el modulo de incidencias (HU-05)
+|-- cqrs/                        # Separacion de Comandos y Consultas
+|   |-- cqrs-explicacion.md      # Teoria y fundamentos del patron CQRS
+|   |-- cqrs-auth.md             # Aplicacion de CQRS en autenticacion
+|   `-- cqrs-tickets.md          # Aplicacion de CQRS en tickets (Commands y Handlers vs Queries y ReadModels)
+|
+`-- solid/                       # Aplicacion detallada de los 5 principios SOLID
+    |-- solid-explicacion.md     # Teoria de principios S, O, L, I, D
+    |-- solid-auth.md            # Desglose de SOLID en el modulo de autenticacion
+    `-- solid-tickets.md         # Desglose de SOLID en el modulo de incidencias (Tickets)
 ```
 
 ---
 
-## Guias Rapidas por Rol
+## 2. Mapa Rapido de Endpoints Activos
+
+| Modulo | Metodo | Endpoint | Operacion CQRS | Descripcion |
+| :--- | :--- | :--- | :--- | :--- |
+| **Auth** | `POST` | `/api/auth/login` | Command | Inicio de sesion y emision de JWT |
+| **Tickets** | `POST` | `/api/tickets` | Command | Creacion basica de tickets (HU-03) |
+| **Tickets** | `GET` | `/api/tickets/department/:departmentId` | Query | Consulta de tickets asignados a un departamento |
+| **Departamentos** | `GET` | `/api/departments` | Query | Listado de departamentos activos (HU-13) |
+| **Admin** | `POST` | `/api/admin/users` | Command | Alta de nuevos usuarios en Auth y base de datos (HU-11) |
+
+---
+
+## 3. Guias Rapidas por Rol
 
 - **Desarrollador Frontend (Flutter / Web):**  
-  Consulta la carpeta `docs/conexion-apis/` para conocer endpoints, cabeceras, JSONs de peticion y ejemplos listos en Dart.
-- **Arquitectura y Backend:**  
-  Consulta `docs/flujos-http/` para entender el ruteo, validaciones y capas.
-- **Diseno de Software y Buenas Practicas:**  
-  Consulta `docs/cqrs/` y `docs/solid/` para comprender las justificaciones tecnicas y patrones implementados.
+  Revisa la carpeta `docs/conexion-apis/` para conocer cabeceras, JSONs de peticion, validaciones y ejemplos listos en Dart.
+- **Desarrollador Backend & DevOps:**  
+  Revisa `docs/flujos-http/` y `docs/SOLID.md` para entender el ensamblaje en `src/config/container.js`, la inyeccion de dependencias y el manejo de errores.
+- **Diseno y Buenas Practicas:**  
+  Revisa `docs/cqrs/` y `docs/solid/` para conocer el patron arquitectonico y los contratos (`src/contracts/index.js`).
