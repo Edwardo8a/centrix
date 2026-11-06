@@ -6,7 +6,6 @@ uploads/
 coverage/
 .scannerwork/
 sonar-project.properties
-src/__tests__
 reportes
-tests
+
 
