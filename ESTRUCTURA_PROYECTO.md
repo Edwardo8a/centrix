@@ -1,6 +1,6 @@
 # Estructura del Proyecto Backend - Centrix
 
-Este documento describe la organizacion de carpetas y archivos del backend, estructurado de forma directa bajo el patron **CQRS** (Command Query Responsibility Segregation). Se eliminaron las capas redundantes de Clean Architecture para mantener una arquitectura limpia, pragmatica y facil de mantener.
+Este documento describe la organizacion de carpetas y archivos del backend de Centrix, estructurado de forma estricta bajo el patron **CQRS (Command Query Responsibility Segregation)**, principios **SOLID** y un contenedor de **Inyeccion de Dependencias (Composition Root)**.
 
 ---
 
@@ -10,106 +10,110 @@ Este documento describe la organizacion de carpetas y archivos del backend, estr
 centrixBack/
 |-- docs/                          # Documentacion tecnica modular
 |   |-- README.md                  # Indice principal y mapa general de documentacion
+|   |-- SOLID.md                   # Evaluacion y justificacion de principios SOLID
 |   |-- conexion-apis/             # Guias tecnicas de integracion de endpoints para Frontend
-|   |   |-- admin-roles.md         # PUT /api/admin/users/:userId/roles (PPS-42)
+|   |   |-- admin-usuarios.md      # POST /api/admin/users (HU-11)
 |   |   |-- auth.md                # POST /api/auth/login
 |   |   |-- departamentos.md       # GET /api/departments (HU-13)
 |   |   |-- tickets-crear.md       # POST /api/tickets (HU-03)
-|   |   `-- tickets-estados.md     # PATCH /api/tickets/:id/status (HU-05)
+|   |   `-- tickets-departamento.md# GET /api/tickets/department/:id
 |   |-- flujos-http/               # Rutas paso a paso de como viaja la peticion
-|   |   |-- flujo-auth.md          # Ciclo de vida del Login
-|   |   `-- flujo-tickets.md       # Ciclo de vida del cambio de estado de tickets
+|   |   |-- flujo-auth.md          # Ciclo de vida del Login (Controller -> Handler -> Service)
+|   |   |-- flujo-tickets-crear.md # Ciclo de vida de Creacion de Tickets
+|   |   `-- flujo-tickets-consulta.md # Ciclo de vida de Consulta por Departamento
 |   |-- cqrs/                      # Patron CQRS explicado
 |   |   |-- cqrs-explicacion.md    # Teoria y fundamentos de CQRS
 |   |   |-- cqrs-auth.md           # CQRS en el modulo de autenticacion
 |   |   `-- cqrs-tickets.md        # CQRS en el modulo de tickets
-|   `-- solid/                     # Principios SOLID explicados
+|   `-- solid/                     # Principios SOLID explicados por modulo
 |       |-- solid-explicacion.md   # Teoria de principios SOLID
 |       |-- solid-auth.md          # SOLID aplicado a autenticacion
 |       `-- solid-tickets.md       # SOLID aplicado a tickets
 |
 |-- src/
-|   |-- commands/                  # CQRS - Operaciones de Escritura (Commands)
+|   |-- commands/                  # CQRS - Operaciones de Escritura (Commands y Handlers)
 |   |   |-- admin/
-|   |   |   `-- ManageUserCommand.js        # Crear usuario y asignar roles
+|   |   |   |-- CreateUserCommand.js        # DTO de creacion de usuario
+|   |   |   `-- CreateUserHandler.js        # Orquestador del alta de usuario
 |   |   |-- auth/
-|   |   |   `-- LoginCommand.js             # Autenticacion con Supabase y firma JWT
+|   |   |   |-- LoginCommand.js             # DTO de inicio de sesion
+|   |   |   `-- LoginHandler.js             # Orquestador de autenticacion y emision de JWT
 |   |   `-- tickets/
-|   |       |-- AssignTicketCommand.js      # Asignacion de ticket a responsable
-|   |       |-- CreateTicketCommand.js      # Creacion basica de tickets (HU-03)
-|   |       `-- UpdateTicketStatusCommand.js# Cambio de estado, historial y notificacion (HU-05)
+|   |       |-- CreateTicketCommand.js      # DTO de creacion de ticket
+|   |       `-- CreateTicketHandler.js      # Orquestador de creacion y persistencia
 |   |
 |   |-- queries/                   # CQRS - Operaciones de Lectura (Queries)
 |   |   |-- departments/
-|   |   |   `-- GetAllDepartmentsQuery.js  # Obtencion de departamentos (HU-13)
+|   |   |   `-- GetAllDepartmentsQuery.js  # Consulta de departamentos activos
 |   |   `-- tickets/
-|   |       |-- GetAllTicketsQuery.js      # Tickets filtrados por departamento
-|   |       |-- GetPendingTicketsQuery.js  # Tickets pendientes para gerencia
-|   |       |-- GetTicketByIdQuery.js      # Detalle completo de un ticket
-|   |       `-- GetTicketsByUserQuery.js   # Tickets creados por un usuario
+|   |       `-- GetTicketsByDepartmentQuery.js # Consulta de tickets por departamento
 |   |
-|   |-- controllers/               # Controladores HTTP de Express
-|   |   |-- AdminController.js              # Creacion de usuarios y asignacion de roles
-|   |   |-- AuthController.js               # Login de usuarios
-|   |   |-- DepartmentQueryController.js    # Consultas de departamentos
+|   |-- controllers/               # Controladores HTTP de Express (delgados)
+|   |   |-- AdminController.js              # Controlador de administracion
+|   |   |-- AuthController.js               # Controlador de login
+|   |   |-- DepartmentQueryController.js    # Controlador de departamentos
 |   |   |-- TicketCommandController.js      # Acciones de escritura de tickets
-|   |   `-- TicketQueryController.js        # Consultas de lectura de tickets
+|   |   `-- TicketQueryController.js        # Consultas de tickets
 |   |
-|   |-- routes/                    # Definicion de rutas HTTP y middlewares asociados
+|   |-- routes/                    # Enrutadores HTTP con middlewares asociados
 |   |   |-- adminRoutes.js                  # /api/admin
 |   |   |-- authRoutes.js                   # /api/auth
 |   |   |-- departmentRoutes.js             # /api/departments
 |   |   `-- ticketRoutes.js                 # /api/tickets
 |   |
-|   |-- repositories/              # Acceso a base de datos (Supabase) y ReadModels
-|   |   |-- DepartmentRepository.js         # Consultas de la tabla departments
-|   |   |-- TicketReadModel.js              # Consultas optimizadas para vistas
-|   |   |-- TicketRepository.js             # Persistencia, estados e historial de tickets
-|   |   `-- UserRepository.js               # Persistencia de usuarios y roles
+|   |-- repositories/              # Persistencia y Modelos de Lectura (ReadModels)
+|   |   |-- DepartmentReadModel.js          # Lectura de la tabla departments
+|   |   |-- TicketReadModel.js              # Lectura optimizada con JOINs hacia users
+|   |   |-- TicketRepository.js             # Insercion en tabla tickets
+|   |   |-- UserReadModel.js                # Lectura de perfiles de usuario y roles
+|   |   `-- UserRepository.js               # Insercion en tabla users y user_roles
 |   |
 |   |-- models/                    # Modelos y entidades de dominio
-|   |   |-- Department.js                   # Modelo de Departamento
-|   |   |-- Ticket.js                       # Modelo de Ticket
-|   |   `-- User.js                         # Modelo de Usuario
+|   |   |-- Department.js                   # Entidad Departamento
+|   |   |-- Ticket.js                       # Entidad Ticket
+|   |   `-- User.js                         # Entidad Usuario
 |   |
-|   |-- services/                  # Servicios transversales
-|   |   `-- NotificationService.js          # Notificaciones al creador por correo y log
+|   |-- services/                  # Servicios de infraestructura
+|   |   |-- AuthService.js                  # Comunicacion con Supabase Auth (signUp, signIn, deleteUser)
+|   |   `-- TokenService.js                 # Firma y parametrizacion de JWT
+|   |
+|   |-- contracts/                 # Definicion formal de interfaces y contratos
+|   |   `-- index.js                        # Tipos JSDoc (ITicketRepository, IAuthService, etc.)
 |   |
 |   |-- middlewares/               # Middlewares de Express
 |   |   |-- auth.js                         # Verificacion de token JWT Bearer
 |   |   |-- errorHandler.js                 # Manejador centralizado de errores
-|   |   `-- roleCheck.js                    # Control de acceso basado en roles
+|   |   `-- roleCheck.js                    # Control de acceso basado en roles (RBAC)
 |   |
 |   |-- validators/                # Esquemas de validacion con express-validator
-|   |   |-- ticketValidator.js              # Validacion de creacion y cambio de estado
-|   |   `-- userValidator.js                # Validacion de credenciales de login
+|   |   |-- ticketValidator.js              # Validacion de tickets
+|   |   `-- userValidator.js                # Validacion de login y registro de usuarios
 |   |
-|   |-- enums/                     # Enumeraciones y constantes del negocio
-|   |   |-- TicketStatus.js                 # Estados canonicos de tickets y normalizador
+|   |-- enums/                     # Enumeraciones del negocio
+|   |   |-- TicketStatus.js                 # Estados canonicos de tickets
 |   |   `-- UserRole.js                     # Roles de usuario permitidos
 |   |
 |   |-- exceptions/                # Clases de error personalizadas
-|   |   |-- BusinessError.js                # Error de regla de negocio (400, 404, etc.)
-|   |   `-- ValidationError.js              # Error de validacion de payload (422)
+|   |   |-- BusinessError.js                # Errores de regla de negocio (400, 404, etc.)
+|   |   `-- ValidationError.js              # Errores de validacion de payload (422/400)
 |   |
-|   |-- config/                    # Configuraciones de la aplicacion
-|   |   |-- jwt.js                          # Parametros de firma y expiracion JWT
-|   |   `-- supabaseClient.js               # Cliente oficial de Supabase
+|   |-- config/                    # Configuraciones y Contenedor de Dependencias
+|   |   |-- container.js                    # Composition Root (Inyeccion de Dependencias)
+|   |   |-- jwt.js                          # Configuracion de JWT
+|   |   `-- supabaseClient.js               # Clientes dataClient, authClient, adminClient
 |   |
 |   |-- utils/                     # Utilidades transversales
 |   |   |-- logger.js                       # Logger con Winston
 |   |   |-- responseBuilder.js              # Estandarizacion de respuestas JSON
 |   |   `-- validatorHelpers.js             # Middleware para evaluar validaciones
 |   |
-|   |-- migrations/                # Scripts SQL de base de datos
-|   |   |-- 001_initial_schema.sql
-|   |   |-- 002_cqrs_acid_transactions.sql
-|   |   `-- 003_tickets_schema.sql
-|   |
 |   |-- __tests__/                 # Pruebas unitarias automatizadas con Jest
 |   |   |-- app.test.js                     # Sanity check
-|   |   |-- ManageUserRoles.test.js         # Pruebas de asignacion de roles (HU-11 / HU-12)
-|   |   `-- UpdateTicketStatus.test.js      # Pruebas de transicion de estados (HU-05)
+|   |   |-- CreateTicketHandler.test.js     # Pruebas de creacion de tickets
+|   |   |-- CreateUserHandler.test.js       # Pruebas de creacion de usuarios
+|   |   |-- GetAllDepartmentsQuery.test.js  # Pruebas de consulta de departamentos
+|   |   |-- GetTicketsByDepartmentQuery.test.js # Pruebas de tickets por departamento
+|   |   `-- LoginHandler.test.js            # Pruebas de autenticacion y JWT
 |   |
 |   `-- app.js                     # Configuracion de Express, CORS, Helmet y rutas
 |
@@ -122,21 +126,18 @@ centrixBack/
 
 ## 2. Descripcion del Patron CQRS en Centrix
 
-En esta arquitectura se separan estrictamente las operaciones en dos ramas:
+El sistema divide las operaciones en:
 
-### Rama de Escritura (Commands)
+### Rama de Escritura (Commands y Handlers)
 - **Ruta**: `src/commands/`
-- **Responsabilidad**: Ejecutan cambios de estado, aplican reglas de negocio e interactuan con repositorios para persistir datos.
-- **Ejemplos**:
-  - `CreateTicketCommand`: Inserta nuevos tickets en base de datos.
-  - `UpdateTicketStatusCommand`: Valida transiciones de estado, actualiza el ticket, registra en el historial y dispara notificaciones.
-  - `LoginCommand`: Valida credenciales contra Supabase Auth y emite el JWT.
-  - `ManageUserCommand`: Crea usuarios y administra asignacion de roles.
+- **Componentes**:
+  - `Command`: Objeto inmutable de datos (DTO).
+  - `Handler`: Orquesta el caso de uso, valida dominio y delega en el repositorio correspondiente.
+- **Ejemplos**: `CreateTicketHandler`, `LoginHandler`, `CreateUserHandler`.
 
-### Rama de Lectura (Queries)
-- **Ruta**: `src/queries/`
-- **Responsabilidad**: Recuperan informacion optimizada para las vistas del cliente (Frontend Flutter) sin mutar datos.
-- **Ejemplos**:
-  - `GetAllTicketsQuery`: Obtiene tickets asignados a un departamento especifico.
-  - `GetTicketByIdQuery`: Consulta el detalle completo de una incidencia.
-  - `GetAllDepartmentsQuery`: Consulta el catalogo de departamentos.
+### Rama de Lectura (Queries y ReadModels)
+- **Ruta**: `src/queries/` y `src/repositories/*ReadModel.js`
+- **Componentes**:
+  - `Query`: Objeto de consulta con parametros de entrada.
+  - `ReadModel`: Consulta optimizada para la vista, resolviendo relaciones y JOINs directamente.
+- **Ejemplos**: `GetTicketsByDepartmentQuery` con `TicketReadModel`, `GetAllDepartmentsQuery` con `DepartmentReadModel`.

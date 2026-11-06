@@ -1,53 +1,48 @@
 # Principios SOLID: Fundamentos y Conceptos Generales
 
-Los principios SOLID son cinco directrices fundamentales de diseno de software orientado a objetos, introducidas por Robert C. Martin (Uncle Bob). Su objetivo principal es crear software comprensible, flexible, desacoplado y facil de mantener a lo largo del tiempo.
+Los principios SOLID son cinco directrices de diseno de software orientado a objetos introducidas por Robert C. Martin (Uncle Bob), enfocadas en crear sistemas flexibles, desacoplados, testeables y faciles de mantener a lo largo del tiempo.
 
 ---
 
-## 1. S — Single Responsibility Principle (Principio de Responsabilidad Unica)
+## 1. S - Single Responsibility Principle (Responsabilidad Unica)
 
 > **"Una clase debe tener una sola razon para cambiar."**
 
-- **Concepto:** Cada modulo o clase debe responsabilizarse de una unica funcionalidad dentro del sistema.
-- **Problema que evita:** Evita las "clases dios" o archivos gigantes de mil lineas donde se mezcla logica de negocio, sentencias SQL, formateo HTTP y envio de correos.
-- **Beneficio:** Modificar un detalle (por ejemplo, cambiar la plantilla del correo de aviso) no pone en riesgo la persistencia en la base de datos.
+- **Concepto:** Cada clase o modulo debe responsabilizarse de una unica funcion en el sistema.
+- **En Centrix:** Separamos Controladores (solo manejan HTTP), Commands (solo transportan datos), Handlers (solo ejecutan un caso de uso), Repositorios (solo escriben en BD), ReadModels (solo leen de BD) y Servicios (solo gestionan tokens o auth).
 
 ---
 
-## 2. O — Open/Closed Principle (Principio de Abierto / Cerrado)
+## 2. O - Open/Closed Principle (Abierto / Cerrado)
 
 > **"Las entidades de software deben estar abiertas a extension, pero cerradas a modificacion."**
 
-- **Concepto:** Debe ser posible anadir nuevas funcionalidades o comportamientos al sistema sin reescribir ni romper el codigo existente que ya funciona y esta probado.
-- **Problema que evita:** Evita tener que alterar codigo base cada vez que el negocio solicita una nueva caracteristica, reduciendo el riesgo de efectos colaterales y regresiones.
-- **Beneficio:** Se agregan nuevos roles, estados o tipos de comprobantes mediante extension de catalogos o nuevos adaptadores.
+- **Concepto:** Debe ser posible anadir nuevas funcionalidades al sistema sin alterar ni poner en riesgo el codigo base que ya funciona y esta probado.
+- **En Centrix:** Para incorporar un nuevo endpoint, se crea un nuevo Command y Handler (o Query) independiente, sin modificar los handlers existentes.
 
 ---
 
-## 3. L — Liskov Substitution Principle (Principio de Sustitucion de Liskov)
+## 3. L - Liskov Substitution Principle (Sustitucion de Liskov)
 
-> **"Si S es un subtipo de T, entonces los objetos de tipo T pueden ser sustituidos por objetos de tipo S sin alterar el funcionamiento del programa."**
+> **"Los objetos de un programa deben poder ser reemplazados por instancias de sus subtipos sin alterar el correcto funcionamiento del programa."**
 
-- **Concepto:** Las clases hijas o derivadas deben respetar el contrato de su clase padre y comportarse como ella sin causar excepciones inesperadas.
-- **Problema que evita:** Evita estructuras fragiles donde se deben colocar condicionales de tipo `if (objeto instanceof Especial)` para que el codigo no explote.
-- **Beneficio:** Permite que excepciones como `BusinessError` hereden de la clase nativa `Error` de JavaScript, permitiendo que el middleware de errores centralizado las procese de forma transparente.
-
----
-
-## 4. I — Interface Segregation Principle (Principio de Segregacion de Interfaces)
-
-> **"Los clientes no deben verse obligados a depender de interfaces que no utilizan."**
-
-- **Concepto:** Es preferible tener multiples interfaces o metodos especificos y pequenos en lugar de una interfaz masiva y generica.
-- **Problema que evita:** Evita que componentes que solo necesitan actualizar un estado carguen metodos pesados de auditoria masiva o exportacion a Excel.
-- **Beneficio:** Mantiene las clases ligeras, cohesivas y enfocadas solo en las dependencias estrictamente necesarias.
+- **Concepto:** Las clases hijas o derivadas deben respetar el contrato y comportamiento esperado por los consumidores.
+- **En Centrix:** Errores como `BusinessError` y `ValidationError` extienden de la clase nativa `Error` de JavaScript, permitiendo que el middleware `errorHandler.js` los procese polimorficamente sin fallos.
 
 ---
 
-## 5. D — Dependency Inversion Principle (Principio de Inversion de Dependencias)
+## 4. I - Interface Segregation Principle (Segregacion de Interfaces)
 
-> **"Los modulos de alto nivel no deben depender de modulos de bajo nivel. Ambos deben depender de abstracciones."**
+> **"Ningun cliente debe ser obligado a depender de metodos que no utiliza."**
 
-- **Concepto:** Las reglas de negocio (alto nivel) no deben crear directamente con `new` sus conexiones a bases de datos o servicios externos (bajo nivel). En su lugar, estas dependencias se reciben desde afuera (Inyeccion de Dependencias).
-- **Problema que evita:** Acoplamiento severo a librerias externas o motores de bases de datos concretos.
-- **Beneficio:** Permite sustituir la base de datos real por objetos simulados (`mocks`) durante las pruebas unitarias, ejecutando cientos de tests en segundos sin internet ni dependencias externas.
+- **Concepto:** Es preferible tener interfaces especificas y pequenas en lugar de una interfaz gigante con metodos innecesarios.
+- **En Centrix:** Dividimos los accesos a datos en repositorios de escritura (`UserRepository`, `TicketRepository`) y modelos de lectura (`UserReadModel`, `TicketReadModel`, `DepartmentReadModel`). Los contratos se formalizan en `src/contracts/index.js` mediante JSDoc.
+
+---
+
+## 5. D - Dependency Inversion Principle (Inversion de Dependencias)
+
+> **"Los modulos de alto nivel no deben depender de modulos de bajo nivel; ambos deben depender de abstracciones."**
+
+- **Concepto:** El codigo de negocio no debe instanciar directamente clientes de base de datos o librerias externas.
+- **En Centrix:** Todos los colaboradores se inyectan a traves del constructor y se configuran centralizadamente en `src/config/container.js` (Composition Root).

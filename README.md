@@ -3,39 +3,38 @@
 [![CI Pipeline](https://github.com/Edwardo8a/centrix/actions/workflows/ci.yml/badge.svg)](https://github.com/Edwardo8a/centrix/actions/workflows/ci.yml)
 ![Node Version](https://img.shields.io/badge/Node.js-v22-green.svg)
 ![Express](https://img.shields.io/badge/Express-4.18-lightgrey.svg)
-![Architecture](https://img.shields.io/badge/Architecture-CQRS-orange.svg)
+![Architecture](https://img.shields.io/badge/Architecture-CQRS%20%2B%20SOLID-orange.svg)
 ![Testing](https://img.shields.io/badge/Testing-Jest-red.svg)
 ![Linter](https://img.shields.io/badge/Linter-ESLint%209-purple.svg)
 
-Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**, **Express**, **Supabase** (PostgreSQL) e implementado bajo una arquitectura desacoplada con el patron **CQRS (Command Query Responsibility Segregation)**.
+Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**, **Express**, **Supabase** (PostgreSQL) e implementado bajo una arquitectura desacoplada con el patron **CQRS (Command Query Responsibility Segregation)**, principios **SOLID** y un contenedor central de **Inyeccion de Dependencias**.
 
 ---
 
 ## Tabla de Contenidos
 1. [Caracteristicas Principales](#caracteristicas-principales)
-2. [Arquitectura del Sistema (CQRS)](#arquitectura-del-sistema-cqrs)
+2. [Arquitectura del Sistema (CQRS + SOLID)](#arquitectura-del-sistema-cqrs--solid)
 3. [Estructura del Proyecto](#estructura-del-proyecto)
 4. [Configuracion del Entorno](#configuracion-del-entorno)
 5. [Scripts Disponibles](#scripts-disponibles)
-6. [Estrategia de Pruebas y Linter](#estrategia-de-pruebas-y-linter)
+6. [Estrategia de Pruebas y Calidad](#estrategia-de-pruebas-y-calidad)
 7. [Endpoints Principales API](#endpoints-principales-api)
-8. [Documentacion Tecnica](#documentacion-tecnica)
+8. [Documentacion Tecnica Modular](#documentacion-tecnica-modular)
 
 ---
 
 ## Caracteristicas Principales
 
-- **Arquitectura CQRS Directa**: Separacion total entre logica de escritura (Commands) y consultas de lectura (Queries).
-- **Control de Calidad (ESLint 9 + Jest)**: Linter estandar y suite de pruebas unitarias automatizadas.
-- **Seguridad y Middlewares**: Autenticacion mediante **JWT**, control de acceso por roles (**RBAC** con `UserRole`), sanitizacion mediante `express-validator` y proteccion con `helmet` y `cors`.
-- **Persistencia con Supabase**: Integracion oficial con `@supabase/supabase-js` con soporte para RPC y repositorios.
-- **CI/CD Automatizado**: Integracion Continua en GitHub Actions para validar linting y pruebas en cada PR o Push.
+- **Arquitectura CQRS Estricta**: Separacion total entre la logica de mutacion (Commands y Handlers) y la logica de consulta directa (Queries y ReadModels).
+- **Inyeccion de Dependencias (Composition Root)**: Todo el grafo de dependencias se ensambla en `src/config/container.js`.
+- **Segregacion de Interfaces y Contratos**: Separacion entre repositorios de escritura (`UserRepository`, `TicketRepository`) y modelos de lectura (`UserReadModel`, `TicketReadModel`, `DepartmentReadModel`) con contratos tipados en `src/contracts/index.js`.
+- **Servicios Aislados**: Extraccion de la comunicacion con Supabase Auth en `AuthService` y la firma de tokens en `TokenService`.
+- **Control de Calidad**: 100% de pruebas unitarias automatizadas con Jest y linteo con ESLint 9.
+- **Seguridad**: Autenticacion con JWT, control de acceso basado en roles (`UserRole`), sanitizacion con `express-validator` y cabeceras de proteccion con `helmet` y `cors`.
 
 ---
 
-## Arquitectura del Sistema (CQRS)
-
-El sistema aplica **Command Query Responsibility Segregation**:
+## Arquitectura del Sistema (CQRS + SOLID)
 
 ```text
                +-------------------------------------------------------+
@@ -54,13 +53,14 @@ El sistema aplica **Command Query Responsibility Segregation**:
                v                                                       v
    +-----------------------+                               +-----------------------+
    |   Command Handlers    |                               |    Query Handlers     |
-   |   (Reglas Negocio)    |                               |   (Lectura Directa)   |
+   |   (Casos de Uso)      |                               |   (Lectura Directa)   |
    +-----------+-----------+                               +-----------+-----------+
                |                                                       |
                v                                                       v
    +-----------------------+                               +-----------------------+
    |   TicketRepository    |                               |    TicketReadModel    |
-   |   UserRepository      |                               |  DepartmentRepository |
+   |   UserRepository      |                               |  DepartmentReadModel  |
+   |   AuthService         |                               |    UserReadModel      |
    +-----------+-----------+                               +-----------+-----------+
                |                                                       |
                +---------------------------+---------------------------+
@@ -93,6 +93,7 @@ Consulta [`ESTRUCTURA_PROYECTO.md`](./ESTRUCTURA_PROYECTO.md) para conocer el ar
    PORT=3001
    SUPABASE_URL=https://tu-proyecto.supabase.co
    SUPABASE_ANON_KEY=tu-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
    JWT_SECRET=tu-secreto-jwt
    JWT_EXPIRES_IN=24h
    ```
@@ -103,8 +104,25 @@ Consulta [`ESTRUCTURA_PROYECTO.md`](./ESTRUCTURA_PROYECTO.md) para conocer el ar
 
 - `npm start`: Inicia el servidor en modo produccion.
 - `npm run dev`: Inicia el servidor con recarga automatica (`nodemon`).
-- `npm test`: Ejecuta las pruebas unitarias con Jest.
+- `npm test`: Ejecuta las pruebas unitarias automatizadas con Jest.
 - `npm run lint`: Ejecuta el linter ESLint.
+
+---
+
+## Estrategia de Pruebas y Calidad
+
+El proyecto cuenta con suites de pruebas unitarias que cubren los Handlers de escritura y los Queries de lectura utilizando mocks de sus dependencias:
+- `CreateTicketHandler.test.js`
+- `CreateUserHandler.test.js`
+- `LoginHandler.test.js`
+- `GetTicketsByDepartmentQuery.test.js`
+- `GetAllDepartmentsQuery.test.js`
+- `app.test.js`
+
+Ejecucion:
+```bash
+npm test
+```
 
 ---
 
@@ -113,18 +131,13 @@ Consulta [`ESTRUCTURA_PROYECTO.md`](./ESTRUCTURA_PROYECTO.md) para conocer el ar
 ### Autenticacion (`/api/auth`)
 | Metodo | Endpoint | Descripcion | Acceso |
 |---|---|---|---|
-| `POST` | `/api/auth/login` | Inicia sesion y devuelve JWT | Publico |
+| `POST` | `/api/auth/login` | Inicia sesion y devuelve JWT con roles | Publico |
 
 ### Incidencias / Tickets (`/api/tickets`)
 | Metodo | Endpoint | Descripcion | Acceso |
 |---|---|---|---|
 | `POST` | `/api/tickets` | Crea un nuevo ticket (HU-03) | Colaborador, Gerente, Admin |
-| `PATCH` | `/api/tickets/:id/status` | Cambia el estado a En revision (HU-05) | Gerente, Admin, Soporte |
-| `POST` | `/api/tickets/:id/assign` | Asigna un ticket a un responsable | Gerente, Admin |
-| `GET` | `/api/tickets/my-tickets` | Obtiene tickets del usuario autenticado | Autenticado |
-| `GET` | `/api/tickets/pending` | Obtiene tickets en cola de atencion | Gerente, Admin |
-| `GET` | `/api/tickets/department/:id` | Obtiene tickets por departamento | Gerente, Admin |
-| `GET` | `/api/tickets/:id` | Detalle completo de un ticket | Autenticado |
+| `GET` | `/api/tickets/department/:departmentId` | Obtiene tickets por departamento | Gerente, Admin |
 
 ### Departamentos (`/api/departments`)
 | Metodo | Endpoint | Descripcion | Acceso |
@@ -135,14 +148,14 @@ Consulta [`ESTRUCTURA_PROYECTO.md`](./ESTRUCTURA_PROYECTO.md) para conocer el ar
 | Metodo | Endpoint | Descripcion | Acceso |
 |---|---|---|---|
 | `POST` | `/api/admin/users` | Crea un nuevo usuario en Auth y BD (HU-11) | Admin |
-| `PUT` | `/api/admin/users/:userId/roles` | Asigna multiples roles a un usuario (PPS-42) | Admin |
 
 ---
 
-## Documentacion Tecnica
+## Documentacion Tecnica Modular
 
 Para mas detalles, consulta la carpeta [`docs/`](./docs/README.md):
+- **Evaluacion SOLID:** [`docs/SOLID.md`](./docs/SOLID.md)
 - **Guias de Conexion para Frontend:** `docs/conexion-apis/`
 - **Flujos HTTP paso a paso:** `docs/flujos-http/`
-- **Arquitectura CQRS por modulo:** `docs/cqrs/`
-- **Principios SOLID explicados:** `docs/solid/`
+- **Arquitectura CQRS explicada:** `docs/cqrs/`
+- **Principios SOLID explicados por modulo:** `docs/solid/`

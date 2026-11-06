@@ -1,87 +1,48 @@
-# Principios SOLID en el Modulo de Incidencias (Tickets - HU-05)
+# Principios SOLID en el Modulo de Incidencias (Tickets)
 
-Este documento detalla como se aplican individualmente los cinco principios SOLID en el flujo de cambio de estado de tickets (`PATCH /api/tickets/:id/status`) correspondiente a la historia de usuario HU-05 (PPS-90 y PPS-91).
-
----
-
-## 1. S — Single Responsibility Principle (Responsabilidad Unica)
-
-La responsabilidad de cambiar el estado a 'En revision' y notificar al creador esta dividida en capas independientes:
-
-- **`ticketValidator.js`:** Su unica tarea es comprobar que el cuerpo JSON contenga el campo `status` y que sea texto valido.
-- **`roleCheck.js`:** Su unica tarea es verificar que el usuario autenticado posea uno de los roles autorizados (`administrador`, `gerente`, `soporte_tecnico`).
-- **`TicketCommandController.js`:** Su unica tarea es extraer `ticketId`, `status` y `comment` de la peticion HTTP y delegarlos al comando.
-- **`UpdateTicketStatusCommand.js`:** Su unica tarea es validar las reglas de negocio (si el ticket existe, si el estado es admisible, si no esta cerrado) y coordinar las acciones.
-- **`TicketRepository.js`:** Su unica tarea es ejecutar los queries de persistencia contra las tablas `tickets` e insertar en `ticket_status_history`.
-- **`NotificationService.js`:** Su unica tarea es localizar el medio de contacto del creador y entregar el mensaje de aviso.
+Este documento detalla como se aplican individualmente los cinco principios SOLID en el modulo de incidencias tecnicas (Tickets).
 
 ---
 
-## 2. O — Open/Closed Principle (Abierto / Cerrado)
+## 1. S - Single Responsibility Principle (Responsabilidad Unica)
 
-- **Estados Extensibles:** Los estados del ticket estan definidos en `TicketStatus.js`. Si manana el negocio decide agregar un estado nuevo (ej. `En espera de repuesto`), se declara en el catalogo y la funcion `normalizeTicketStatus` lo aceptara de inmediato sin tener que reescribir ni una sola linea del comando `UpdateTicketStatusCommand`.
-- **Canales de Notificacion Extensibles:** Si en el futuro se desea enviar notificaciones Push a Flutter mediante Firebase Cloud Messaging (FCM) o mensajes por WhatsApp, solo se extiende el metodo `notifyUser` en `NotificationService`. El comando de tickets continuara llamando a `this.notificationService.notifyUser(...)` sin enterarse de que el canal de envio cambio.
+La responsabilidad de crear y consultar tickets se divide en componentes pequenos y especializados:
 
----
-
-## 3. L — Liskov Substitution Principle (Sustitucion de Liskov)
-
-- Si el ticket solicitado no existe en la base de datos o si el ticket ya se encuentra cerrado, el comando interrumpe el flujo lanzando:
-  ```javascript
-  throw new BusinessError('El ticket especificado no existe', 404);
-  throw new BusinessError('No se puede cambiar el estado de un ticket cerrado', 400);
-  ```
-- Al heredar de `Error`, `BusinessError` sustituye a cualquier error nativo de Node.js. El manejador global `errorHandler.js` extrae el `statusCode` asignado y responde al cliente de forma limpia y consistente.
+- **`ticketValidator.js`:** Comprueba que los campos requeridos (`title`, `description`, `priority`, `department_id`) cumplan las reglas de formato.
+- **`TicketCommandController.js`:** Desempaqueta la peticion HTTP, construye el `CreateTicketCommand` e invoca `createTicketHandler.handle()`.
+- **`TicketQueryController.js`:** Extrae `departmentId` e invoca `getTicketsByDepartmentQuery.execute()`.
+- **`CreateTicketCommand.js`:** DTO inmutable con los datos necesarios para registrar el ticket.
+- **`CreateTicketHandler.js`:** Orquesta la creacion del ticket instanciando la entidad `Ticket` y delegando en `ticketRepository`.
+- **`GetTicketsByDepartmentQuery.js`:** Orquesta la consulta delegando en `ticketReadModel`.
+- **`TicketRepository.js`:** Encapsula la insercion del ticket en la tabla `tickets`.
+- **`TicketReadModel.js`:** Encapsula la consulta relacional con JOINs hacia `users` para entregar la proyeccion lista a Flutter.
+- **`Ticket.js`:** Modelo de dominio que define la estructura y reglas de entidad.
 
 ---
 
-## 4. I — Interface Segregation Principle (Segregacion de Interfaces)
+## 2. O - Open/Closed Principle (Abierto / Cerrado)
 
-- El controlador de comandos `TicketCommandController` y el comando `UpdateTicketStatusCommand` solo interactuan con los metodos de persistencia que necesitan:
-  - `ticketRepository.findById(ticketId)`
-  - `ticketRepository.updateStatus(ticketId, newStatus)`
-  - `ticketRepository.recordStatusHistory(...)`
-- No dependen ni cargan metodos pesados de lectura o reportes masivos (`TicketReadModel`). Quien solo necesita cambiar un estado, solo conoce las operaciones de cambio de estado.
+- **Extension sin modificacion:** Si en el futuro se incorpora la asignacion de tickets o el cierre de una incidencia, se crean nuevos comandos y handlers (`CloseTicketCommand`, `CloseTicketHandler`) sin modificar el handler de creacion (`CreateTicketHandler.js`).
+- **Nuevas consultas:** Para listar tickets por usuario o por estado, se crean nuevos queries y metodos en `TicketReadModel` sin tocar el repositorio de escritura.
 
 ---
 
-## 5. D — Dependency Inversion Principle (Inversion de Dependencias)
+## 3. L - Liskov Substitution Principle (Sustitucion de Liskov)
 
-`UpdateTicketStatusCommand` nunca hace `new TicketRepository()` ni `new NotificationService()` adentro de su metodo de ejecucion. Recibe todas sus dependencias desde el constructor:
+- Errores arrojados en el flujo (`ValidationError`, `BusinessError`) derivan de la clase base `Error`.
+- El middleware global `errorHandler.js` puede sustituir y procesar cualquier error derivado de forma uniforme, extrayendo su codigo de estado y lista de errores asociados.
 
-```javascript
-class UpdateTicketStatusCommand {
-  constructor({ ticketRepository, notificationService, auditService }) {
-    this.ticketRepository = ticketRepository;         // Dependencia inyectada
-    this.notificationService = notificationService;   // Dependencia inyectada
-    this.auditService = auditService;                 // Dependencia inyectada
-  }
+---
 
-  async execute({ ticketId, newStatus, userId, comment }) {
-    // Utiliza las abstracciones sin depender de la implementacion fisica
-    const ticket = await this.ticketRepository.findById(ticketId);
-    ...
-  }
-}
-```
+## 4. I - Interface Segregation Principle (Segregacion de Interfaces)
 
-### Beneficio en Pruebas Unitarias:
-Este desacoplamiento permitio crear la suite de pruebas automatizadas `UpdateTicketStatus.test.js` en Jest, donde se inyectaron objetos simulados:
+- El handler de creacion (`CreateTicketHandler`) solo depende del contrato `ITicketRepository` (operacion `create`).
+- El query de lectura (`GetTicketsByDepartmentQuery`) solo depende del contrato `ITicketReadModel` (operacion `getTicketsByDepartment`).
+- Ninguna clase recibe metodos ajenos a su labor, evitando dependencias innecesarias entre lectura y escritura.
 
-```javascript
-const mockTicketRepository = {
-  findById: jest.fn(),
-  updateStatus: jest.fn(),
-  recordStatusHistory: jest.fn()
-};
-const mockNotificationService = {
-  notifyUser: jest.fn().mockResolvedValue({ delivered: true })
-};
+---
 
-const command = new UpdateTicketStatusCommand({
-  ticketRepository: mockTicketRepository,
-  notificationService: mockNotificationService
-});
-```
+## 5. D - Dependency Inversion Principle (Inversion de Dependencias)
 
-Se validaron las 8 reglas de negocio de la HU-05 en menos de 1 segundo sin tocar la base de datos de produccion ni enviar correos reales.
+- Tanto los Handlers como los Queries reciben sus dependencias inyectadas por constructor basandose en los contratos de `src/contracts/index.js`.
+- Ningun controlador instancia repositorios ni clientes de base de datos; todo se resuelve en el Composition Root (`src/config/container.js`).
