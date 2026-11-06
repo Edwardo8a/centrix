@@ -11,13 +11,16 @@
     "lint": "eslint .",
     "test": "jest --coverage",
     "sonar": "sonar-scanner-npm",
+    "sonar:full": "npm run test && sonar-scanner-npm",
     "build": "tsc"
   },
   "jest": {
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ],
     "collectCoverage": true,
     "collectCoverageFrom": [
       "src/**/*.js",
-      "!src/__tests__/**",
       "!**/node_modules/**"
     ],
     "coveragePathIgnorePatterns": [

@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 
 const loginValidator = [
   body('email').isEmail().withMessage('Debe ingresar un email válido'),
@@ -12,7 +12,15 @@ const createUserValidator = [
   body('apellido_pat').trim().notEmpty().withMessage('El apellido paterno es obligatorio')
 ];
 
+const getSolversValidator = [
+  query('department_id')
+    .optional()
+    .isUUID()
+    .withMessage('El ID del departamento debe ser un UUID válido')
+];
+
 module.exports = {
   loginValidator,
-  createUserValidator
+  createUserValidator,
+  getSolversValidator
 };

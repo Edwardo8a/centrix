@@ -4,11 +4,11 @@ const ResponseBuilder = require('../utils/responseBuilder');
 const roleCheck = (allowedRoles = []) => {
   return (req, res, next) => {
     if (!req.user) {
-      return ResponseBuilder.error(res, 'Acceso no autorizado', 403);
+      return ResponseBuilder.error(res, 'Acceso no autorizado', 401);
     }
 
-    // Se extrae la lista de roles del usuario, soportando formato de arreglo o propiedad unica
-    const userRoles = Array.isArray(req.user.roles)
+    // Se extrae la lista de roles del usuario, priorizando roles[] y usando role como respaldo
+    const userRoles = Array.isArray(req.user.roles) && req.user.roles.length > 0
       ? req.user.roles
       : (req.user.role ? [req.user.role] : []);
 
