@@ -1,3 +1,5 @@
+const UserRole = require('../enums/UserRole');
+
 class UserRepository {
   constructor({ supabase }) {
     this.supabase = supabase;
@@ -22,12 +24,28 @@ class UserRepository {
       throw new Error(`Error al crear el usuario: ${userError.message}`);
     }
 
-    // 2. Asignar el rol por defecto (ID 1) en user_roles
+    // 2. Resolver el rol por defecto ('colaborador') por descripcion (case-insensitive)
+    const { data: roleRecord, error: roleLookupError } = await this.supabase
+      .from('roles')
+      .select('id, descripcion')
+      .ilike('descripcion', UserRole.COLABORADOR)
+      .maybeSingle();
+
+    if (roleLookupError || !roleRecord) {
+      await this.supabase.from('users').delete().eq('id', userRecord.id);
+      throw new Error(
+        `Error al obtener el rol por defecto (${UserRole.COLABORADOR}): ${
+          roleLookupError ? roleLookupError.message : 'Rol no encontrado'
+        }`
+      );
+    }
+
+    // 3. Asignar el rol por defecto en user_roles
     const { error: rolError } = await this.supabase
       .from('user_roles')
       .insert([{
         user_id: userRecord.id,
-        role_id: 1
+        role_id: roleRecord.id
       }]);
 
     if (rolError) {

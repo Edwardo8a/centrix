@@ -3,3 +3,10 @@ node_modules/
 uploads/
 *.log
 .DS_Store
+coverage/
+.scannerwork/
+sonar-project.properties
+src/__tests__
+reportes
+tests
+
