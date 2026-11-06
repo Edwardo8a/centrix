@@ -1,5 +1,4 @@
 const dns = require('dns');
-require('cross-fetch/polyfill');
 const { createClient } = require('@supabase/supabase-js');
 
 // Evita demoras de 2-5s en Windows cuando el ISP anuncia IPv6 sin salida real hacia Cloudflare/Supabase
