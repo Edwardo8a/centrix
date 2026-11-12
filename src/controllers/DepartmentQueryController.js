@@ -1,15 +1,19 @@
-const { getAllDepartmentsQuery } = require('../config/container');
+const GetAllDepartmentsQuery = require('../queries/departments/GetAllDepartmentsQuery');
 const ResponseBuilder = require('../utils/responseBuilder');
 
-class DepartmentQueryController {
-  static async getAll(req, res, next) {
+const departmentQueryControllerFactory = ({ getAllDepartmentsHandler }) => ({
+  getAll: async (req, res, next) => {
     try {
-      const data = await getAllDepartmentsQuery.execute();
+      const query = new GetAllDepartmentsQuery();
+      const data = typeof getAllDepartmentsHandler?.handle === 'function'
+        ? await getAllDepartmentsHandler.handle(query)
+        : await getAllDepartmentsHandler?.execute();
+
       return ResponseBuilder.success(res, data, 'Departamentos obtenidos exitosamente');
     } catch (error) {
       next(error);
     }
   }
-}
+});
 
-module.exports = DepartmentQueryController;
+module.exports = departmentQueryControllerFactory;

@@ -26,12 +26,16 @@
 /**
  * @typedef {Object} IUserRepository
  * @property {(userData: object, authId: string) => Promise<object>} create
+ * @property {(id: string) => Promise<object|null>} findById
+ * @property {(userId: string, data: object) => Promise<object|null>} update
+ * @property {(userId: string) => Promise<object|null>} softDelete
  */
 
 /**
  * @typedef {Object} IUserReadModel
  * @property {(id: string) => Promise<{id: string, nombre: string, apellido_pat?: string, apellido_mat?: string, tel?: string, department_id: string|null, role: string, roles: string[]}|null>} findById
  * @property {(departmentId: string) => Promise<Array<{id: string, fullName: string}>>} getSolversByDepartment
+ * @property {(params: { role?: string|null, departmentId?: string|null, search?: string|null, page?: number, limit?: number }) => Promise<{ items: Array<object>, pagination: { total: number, page: number, limit: number, totalPages: number } }>} getAllUsers
  */
 
 /**
@@ -44,6 +48,16 @@
 /**
  * @typedef {Object} ITokenService
  * @property {(payload: object) => string} generateToken
+ */
+
+/**
+ * @typedef {Object} IStorageService
+ * @property {(rawAttachments: Array<object>) => Promise<Array<{ id: string, fileFormat: string, sizeBytes: number, createdAtIso: string, signedUrl: string|null }>>} createSignedUrlsForAttachments
+ */
+
+/**
+ * @typedef {Object} IGetAllDepartmentsHandler
+ * @property {() => Promise<Array<object>>} handle
  */
 
 module.exports = {};
