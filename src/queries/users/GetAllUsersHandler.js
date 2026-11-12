@@ -9,8 +9,11 @@ class GetAllUsersHandler {
   }
 
   async handle(query = {}) {
-    const page = Number(query.page || 1);
-    const limit = Number(query.limit || 20);
+    const rawPage = query.page ?? 1;
+    const page = Number(rawPage);
+
+    const rawLimit = query.limit ?? 20;
+    const limit = Number(rawLimit);
 
     if (!Number.isInteger(page) || page < 1) {
       throw new BusinessError('El parámetro page debe ser un entero >= 1', 400);
