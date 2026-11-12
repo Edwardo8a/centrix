@@ -60,4 +60,18 @@
  * @property {() => Promise<Array<object>>} handle
  */
 
+/**
+ * @typedef {Object} IResourceRequestRepository
+ * @property {(data: import('../models/ResourceRequest')) => Promise<{id: string}>} create
+ * @property {(id: string) => Promise<object|null>} findById
+ * @property {(requestId: string, userId: string) => Promise<object|null>} softDelete
+ */
+
+/**
+ * @typedef {Object} IResourceRequestReadModel
+ * @property {(userId: string) => Promise<Array<object>>} getRequestsByCreator
+ * @property {(departmentId: string, filters?: { status?: string, page?: number, limit?: number }) => Promise<{ items: Array<object>, pagination: { total: number, page: number, limit: number, totalPages: number } }>} getRequestsByDepartment
+ * @property {(requestId: string) => Promise<object|null>} getRequestById
+ */
+
 module.exports = {};
