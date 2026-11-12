@@ -1,19 +1,19 @@
-# Guía de Conexión: Actualización de Estado de Tickets (HU-05)
+# Guia de Conexion: Actualizacion de Estado de Tickets (HU-05)
 
-Esta guía describe cómo el equipo de Frontend (Flutter / Web) debe conectarse al endpoint de cambio de estado de tickets para Administradores y Gerentes.
+Esta guia describe como el equipo de Frontend (Flutter / Web) debe conectarse al endpoint de cambio de estado de tickets para Administradores, Gerentes y Tecnicos de Soporte.
 
 ---
 
-## 1. Información del Endpoint
+## 1. Informacion del Endpoint
 
-| Parámetro | Detalle |
+| Parametro | Detalle |
 | :--- | :--- |
-| **Método HTTP** | `PATCH` |
+| **Metodo HTTP** | `PATCH` |
 | **Ruta** | `/api/tickets/:id/status` |
-| **URL Base Local** | `http://localhost:3000` (o `http://10.0.2.2:3000` en emulador Android) |
-| **Autenticación** | Requerida (`Bearer Token`) |
-| **Roles Autorizados** | `gerente`, `administrador` |
-| **Tipo de Operación CQRS** | Command (Mutación transaccional con auditoría) |
+| **URL Base Local** | `http://localhost:3001` (o `http://10.0.2.2:3001` en emulador Android) |
+| **Autenticacion** | Requerida (`Bearer Token`) |
+| **Roles Autorizados** | `gerente`, `soporte_tecnico`, `administrador` |
+| **Tipo de Operacion CQRS** | Command (Mutacion transaccional con historial y notificacion) |
 
 ---
 
@@ -26,42 +26,53 @@ Authorization: Bearer <TOKEN_JWT_DEL_USUARIO>
 
 ---
 
-## 3. Parámetros de Ruta (Path Parameters)
+## 3. Parametros de Ruta (Path Parameters)
 
 - `:id` (UUID, Obligatorio): Identificador del ticket a modificar.  
   Ejemplo: `/api/tickets/325cc46a-6a58-4d6a-a76b-911f13afd5c6/status`
 
 ---
 
-## 4. Cuerpo de la Petición (Request Body)
+## 4. Cuerpo de la Peticion (Request Body)
 
 ```json
 {
-  "status": "En revision",
-  "comment": "Iniciando revisión técnica del equipo"
+  "status": "Resuelto",
+  "comment": "Se sustituyo la memoria RAM defectuosa por un modulo de 16GB",
+  "resolution_notes": "Equipo probado y operativo al 100%"
 }
 ```
 
 ### Campos:
-- **`status`** (String, Obligatorio): Nuevo estado al que transiciona el ticket. Admite:
+- **`status`** (String, Obligatorio): Nuevo estado. Valores canonicos:
   - `"Abierto"`
   - `"En revision"`
   - `"En progreso"`
   - `"Resuelto"`
   - `"Cerrado"`
-  *(El backend normaliza automáticamente variantes como "en_revision", "En revisión", "en progreso", etc.)*
-- **`comment`** (String, Opcional, pero **Obligatorio cuando el nuevo estado es "Cerrado"**): Motivo del cambio que se almacena en el historial de auditoría `ticket_status_history`.
+  - `"Rechazado"`
+  *(El backend normaliza automaticamente mayusculas, minusculas, tildes y guiones bajos).*
+- **`comment`** (String, Opcional): Comentario explicativo que se registra en la tabla de historial de auditoria `ticket_status_history`.
+- **`resolution_notes`** (String, Condicional): Obligatorio cuando el nuevo estado es `"Resuelto"`.
 
 ---
 
-## 5. Matriz de Transiciones Permitidas
+## 5. Reglas de Negocio y Transiciones Permitidas
 
-El ciclo de vida del ticket se rige por las siguientes transiciones:
-- **Abierto** &rarr; En revision, En progreso, Cerrado
-- **En revision** &rarr; En progreso, Resuelto, Cerrado
-- **En progreso** &rarr; En revision, Resuelto, Cerrado
-- **Resuelto** &rarr; En progreso, Cerrado
-- **Cerrado** &rarr; *(Estado terminal, no admite transiciones)*
+### 5.1. Matriz de Transiciones
+| Estado Actual | Estados Hacia Donde Puede Moverse |
+| :--- | :--- |
+| **Abierto** | `En revision`, `En progreso`, `Cerrado`, `Rechazado` |
+| **En revision** | `En progreso`, `Resuelto`, `Cerrado`, `Rechazado` |
+| **En progreso** | `En revision`, `Resuelto`, `Cerrado` |
+| **Resuelto** | `En progreso` (reapertura por disconformidad), `Cerrado` |
+| **Cerrado** | *Ninguno (Estado Terminal)* |
+| **Rechazado** | *Ninguno (Estado Terminal)* |
+
+### 5.2. Reglas por Rol de Usuario
+- **`soporte_tecnico`:** Solo tiene permitido mover el ticket a: `En revision`, `En progreso` y `Resuelto`. No puede cerrar ni rechazar tickets.
+- **`gerente`:** Puede mover a cualquier estado valido dentro de su departamento (anti-IDOR protegido).
+- **`administrador`:** Permiso global en todos los tickets.
 
 ---
 
@@ -73,44 +84,34 @@ El ciclo de vida del ticket se rige por las siguientes transiciones:
   "success": true,
   "message": "Estado del ticket actualizado exitosamente",
   "data": {
-    "id": "325cc46a-6a58-4d6a-a76b-911f13afd5c6",
-    "previousStatus": "Abierto",
-    "status": "En revision"
+    "ticketId": "325cc46a-6a58-4d6a-a76b-911f13afd5c6",
+    "previousStatus": "En progreso",
+    "newStatus": "Resuelto",
+    "updatedAt": "2026-11-12T18:30:00.000Z"
   }
 }
 ```
 
 ### 6.2. Errores Comunes
-- **400 Bad Request:**
-  - `El ID del ticket debe ser un UUID válido`
-  - `El estado es obligatorio` / `El estado debe ser una cadena de texto`
-  - `Estado de ticket no válido`
-  - `El comentario es obligatorio para cerrar el ticket`
-- **401 Unauthorized:**
-  - `Token no proporcionado` o `Token no valido o expirado`
-- **403 Forbidden:**
-  - `No tienes permisos para realizar esta accion` (ej. rol `colaborador`)
-- **404 Not Found:**
-  - `Ticket no encontrado` (no existe o fue eliminado)
-- **409 Conflict:**
-  - `El ticket ya se encuentra en ese estado`
-  - `No se permite la transición de estado de "<actual>" a "<solicitado>"`
-  - `El ticket cambió de estado, vuelve a intentarlo` (concurrencia)
+- **400 Bad Request:** Estado no valido, transicion no permitida por la matriz, o falta `resolution_notes` al resolver.
+- **403 Forbidden:** El rol no tiene permiso para la transicion, o el gerente intenta modificar un ticket fuera de su departamento.
+- **404 Not Found:** El ticket no existe o se encuentra eliminado (borrado logico).
 
 ---
 
-## 7. Ejemplo en Flutter (Dart)
+## 7. Ejemplo de Consumo en Flutter (Dart)
 
 ```dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<Map<String, dynamic>?> updateTicketStatus({
+Future<bool> changeTicketStatus({
   required String baseUrl,
   required String token,
   required String ticketId,
   required String newStatus,
   String? comment,
+  String? resolutionNotes,
 }) async {
   final url = Uri.parse('$baseUrl/api/tickets/$ticketId/status');
 
@@ -122,15 +123,16 @@ Future<Map<String, dynamic>?> updateTicketStatus({
     },
     body: jsonEncode({
       'status': newStatus,
-      if (comment != null && comment.isNotEmpty) 'comment': comment,
+      'comment': comment ?? 'Cambio de estado desde aplicacion',
+      if (resolutionNotes != null) 'resolution_notes': resolutionNotes,
     }),
   );
 
   final body = jsonDecode(response.body);
   if (response.statusCode == 200 && body['success'] == true) {
-    return body['data'];
+    return true;
   } else {
-    throw Exception(body['message'] ?? 'Error al actualizar estado del ticket');
+    throw Exception(body['message'] ?? 'Error al cambiar estado');
   }
 }
 ```

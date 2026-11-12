@@ -1,19 +1,19 @@
-# Guía de Conexión: Eliminación de Tickets (Borrado Lógico)
+# Guia de Conexion: Eliminacion de Tickets (Borrado Logico)
 
-Esta guía describe cómo el equipo de Frontend (Flutter / Web) debe conectarse al endpoint de eliminación de tickets para Administradores.
+Esta guia describe como el equipo de Frontend (Flutter / Web) debe conectarse al endpoint de eliminacion de tickets para Administradores.
 
 ---
 
-## 1. Información del Endpoint
+## 1. Informacion del Endpoint
 
-| Parámetro | Detalle |
+| Parametro | Detalle |
 | :--- | :--- |
-| **Método HTTP** | `DELETE` |
+| **Metodo HTTP** | `DELETE` |
 | **Ruta** | `/api/tickets/:id` |
-| **URL Base Local** | `http://localhost:3000` (o `http://10.0.2.2:3000` en emulador Android) |
-| **Autenticación** | Requerida (`Bearer Token`) |
+| **URL Base Local** | `http://localhost:3001` (o `http://10.0.2.2:3001` en emulador Android) |
+| **Autenticacion** | Requerida (`Bearer Token`) |
 | **Roles Autorizados** | `administrador` |
-| **Tipo de Operación CQRS** | Command (Mutación con borrado lógico) |
+| **Tipo de Operacion CQRS** | Command (Mutacion con borrado logico) |
 
 ---
 
@@ -26,14 +26,14 @@ Authorization: Bearer <TOKEN_JWT_DEL_USUARIO>
 
 ---
 
-## 3. Parámetros de Ruta (Path Parameters)
+## 3. Parametros de Ruta (Path Parameters)
 
-- `:id` (UUID, Obligatorio): Identificador del ticket a eliminar.  
+- `:id` (UUID, Obligatorio): Identificador del ticket a eliminar.
   Ejemplo: `/api/tickets/325cc46a-6a58-4d6a-a76b-911f13afd5c6`
 
 ---
 
-## 4. Cuerpo de la Petición (Request Body)
+## 4. Cuerpo de la Peticion (Request Body)
 
 *No requiere cuerpo (body).*
 
@@ -42,6 +42,7 @@ Authorization: Bearer <TOKEN_JWT_DEL_USUARIO>
 ## 5. Respuestas del Servidor
 
 ### 5.1. Respuesta Exitosa (200 OK)
+
 ```json
 {
   "success": true,
@@ -52,19 +53,33 @@ Authorization: Bearer <TOKEN_JWT_DEL_USUARIO>
 }
 ```
 
+> **Nota:** El borrado es logico (soft delete). El registro permanece en la base de datos con el campo `deleted_at` marcado. El ticket deja de aparecer en todas las consultas que filtran `deleted_at IS NULL`.
+
 ### 5.2. Errores Comunes
-- **400 Bad Request:**
-  - `El ID del ticket debe ser un UUID válido`
-- **401 Unauthorized:**
-  - `Token no proporcionado` o `Token no valido o expirado`
-- **403 Forbidden:**
-  - `No tienes permisos para realizar esta accion` (ej. roles `colaborador`, `gerente`, `soporte`)
-- **404 Not Found:**
-  - `Ticket no encontrado` (no existe o ya había sido eliminado previamente)
+
+| Codigo | Mensaje | Causa |
+| :--- | :--- | :--- |
+| `400` | `El ID del ticket debe ser un UUID valido` | El parametro `:id` no es UUID |
+| `401` | `Token no proporcionado` / `Token no valido o expirado` | JWT ausente o caducado |
+| `403` | `No tienes permisos para realizar esta accion` | Rol diferente a `administrador` |
+| `404` | `Ticket no encontrado` | El ticket no existe o ya fue eliminado |
 
 ---
 
-## 6. Ejemplo en Flutter (Dart)
+## 6. Handler y Repositorio (CQRS)
+
+```text
+DELETE /api/tickets/:id
+  --> DeleteTicketCommand { ticketId }
+  --> DeleteTicketHandler.handle(command)
+      --> TicketRepository.softDelete(ticketId)
+          --> UPDATE tickets SET deleted_at = NOW() WHERE id = ticketId
+  --> 200 OK { id }
+```
+
+---
+
+## 7. Ejemplo en Flutter (Dart)
 
 ```dart
 import 'dart:convert';
@@ -88,8 +103,7 @@ Future<bool> deleteTicket({
   final body = jsonDecode(response.body);
   if (response.statusCode == 200 && body['success'] == true) {
     return true;
-  } else {
-    throw Exception(body['message'] ?? 'Error al eliminar ticket');
   }
+  throw Exception(body['message'] ?? 'Error al eliminar ticket');
 }
 ```
