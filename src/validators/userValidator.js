@@ -19,8 +19,14 @@ const getSolversValidator = [
     .withMessage('El ID del departamento debe ser un UUID válido')
 ];
 
+const deviceTokenValidator = [
+  body('fcm_token').notEmpty().withMessage('El fcm_token es obligatorio'),
+  body('platform').optional().isIn(['android', 'ios', 'web']).withMessage('Plataforma no válida')
+];
+
 module.exports = {
   loginValidator,
   createUserValidator,
-  getSolversValidator
+  getSolversValidator,
+  deviceTokenValidator
 };

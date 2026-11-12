@@ -43,6 +43,12 @@ router.get(
 );
 
 router.get(
+  '/pending',
+  roleCheck([UserRole.SOPORTE_TECNICO, UserRole.ADMINISTRADOR]),
+  ticketQueryController.getAssigned
+);
+
+router.get(
   '/department',
   roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]),
   getTicketsByDepartmentValidator,

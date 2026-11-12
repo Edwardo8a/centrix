@@ -1,6 +1,7 @@
 const { TicketStatus, ALLOWED_STATUS_TRANSITIONS } = require('../../enums/TicketStatus');
 const UserRole = require('../../enums/UserRole');
 const BusinessError = require('../../exceptions/BusinessError');
+const notificationService = require('../../services/NotificationService');
 
 class AssignTicketHandler {
   /**
@@ -74,6 +75,18 @@ class AssignTicketHandler {
       assignedTo: command.assignedTo,
       userId: command.userId,
       comment
+    });
+
+    // Disparar notificación push y en base de datos al técnico asignado
+    notificationService.sendNotificationToUser({
+      userId: command.assignedTo,
+      ticketId: command.ticketId,
+      title: 'Nuevo ticket asignado',
+      body: `Se te ha asignado el ticket: "${ticket.title}"`,
+      type: 'ticket_assigned',
+      data: { ticket_id: command.ticketId }
+    }).catch(err => {
+      console.error('[AssignTicketHandler] Error enviando notificación:', err.message);
     });
 
     return { id: result.id };
