@@ -55,6 +55,79 @@ class UserRepository {
 
     return userRecord;
   }
+
+  async findById(id) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('id, full_name, apellido_pat, apellido_mat, tel, email, department_id, deleted_at')
+      .eq('id', id)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async update(userId, data) {
+    const updatePayload = {};
+    if (data.nombre !== undefined) updatePayload.full_name = data.nombre;
+    if (data.apellido_pat !== undefined) updatePayload.apellido_pat = data.apellido_pat;
+    if (data.apellido_mat !== undefined) updatePayload.apellido_mat = data.apellido_mat;
+    if (data.tel !== undefined) updatePayload.tel = data.tel;
+    if (data.departmentId !== undefined) updatePayload.department_id = data.departmentId;
+
+    if (Object.keys(updatePayload).length > 0) {
+      const { error: userError } = await this.supabase
+        .from('users')
+        .update(updatePayload)
+        .eq('id', userId)
+        .is('deleted_at', null);
+
+      if (userError) throw userError;
+    }
+
+    // Si se envía un rol para actualizar
+    if (data.role) {
+      const { data: roleRecord, error: roleLookupError } = await this.supabase
+        .from('roles')
+        .select('id, descripcion')
+        .ilike('descripcion', data.role)
+        .maybeSingle();
+
+      if (roleLookupError || !roleRecord) {
+        throw new Error(`Rol no válido: ${data.role}`);
+      }
+
+      // Actualizar o reasignar en user_roles
+      await this.supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      const { error: insertRoleError } = await this.supabase
+        .from('user_roles')
+        .insert([{ user_id: userId, role_id: roleRecord.id }]);
+
+      if (insertRoleError) throw insertRoleError;
+    }
+
+    return await this.findById(userId);
+  }
+
+  async softDelete(userId) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .update({
+        deleted_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .is('deleted_at', null)
+      .select('id')
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
 }
 
 module.exports = UserRepository;
