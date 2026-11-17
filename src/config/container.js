@@ -13,8 +13,25 @@ const ticketReadModel = new TicketReadModel({
   storageClient: adminClient || dataClient
 });
 const departmentReadModel = new DepartmentReadModel({ supabase: dataClient });
-const userRepository = new UserRepository({ supabase: dataClient });
+const userRepository = new UserRepository({ supabase: adminClient || dataClient });
 const userReadModel = new UserReadModel({ supabase: dataClient });
+
+const EvidenceRepository = require('../repositories/EvidenceRepository');
+const FileStorageService = require('../services/FileStorageService');
+const TicketEvidenceAccessPolicy = require('../services/TicketEvidenceAccessPolicy');
+const AttachTicketEvidenceHandler = require('../commands/tickets/AttachTicketEvidenceHandler');
+const GetTicketEvidencesQuery = require('../queries/tickets/GetTicketEvidencesQuery');
+const GetPendingTicketsHandler = require('../queries/tickets/GetPendingTicketsHandler');
+
+const evidenceDependencies = {
+  ticketRepository,
+  evidenceRepository: new EvidenceRepository({ supabase: adminClient }),
+  fileStorageService: new FileStorageService({ supabase: adminClient }),
+  accessPolicy: new TicketEvidenceAccessPolicy()
+};
+const attachTicketEvidenceHandler = new AttachTicketEvidenceHandler(evidenceDependencies);
+const getTicketEvidencesQuery = new GetTicketEvidencesQuery(evidenceDependencies);
+const getPendingTicketsHandler = new GetPendingTicketsHandler({ ticketReadModel });
 
 // Services
 const AuthService = require('../services/AuthService');
@@ -81,6 +98,10 @@ const userQueryController = userQueryControllerFactory({
 });
 
 module.exports = {
+  userRepository,
+  attachTicketEvidenceHandler,
+  getTicketEvidencesQuery,
+  getPendingTicketsHandler,
   userReadModel,
   ticketRepository,
   ticketReadModel,

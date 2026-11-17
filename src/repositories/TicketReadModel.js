@@ -1,8 +1,6 @@
 const logger = require('../utils/logger');
-const {
-  DEFAULT_ATTACHMENTS_BUCKET,
-  extractBucketObjectPath
-} = require('../commands/tickets/AddTicketAttachmentHandler');
+const { evidenceObjectPath } = require('../services/FileStorageService');
+const { DEFAULT_ATTACHMENTS_BUCKET } = require('../commands/tickets/AddTicketAttachmentHandler');
 
 const TICKET_SUMMARY_SELECT = `
   id,
@@ -99,6 +97,15 @@ class TicketReadModel {
     }
 
     return data.map(ticket => this._mapTicketSummary(ticket));
+  }
+
+  async getPendingTickets(departmentId = null) {
+    let query = this.supabase.from('tickets').select(TICKET_SUMMARY_SELECT)
+      .is('deleted_at', null).in('status', ['Abierto', 'En revision', 'En progreso']);
+    if (departmentId) query = query.eq('department_id', departmentId);
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(ticket => this._mapTicketSummary(ticket));
   }
 
   async getTicketsByAssignee(userId) {
@@ -220,7 +227,7 @@ class TicketReadModel {
 
     const itemsWithPaths = sorted.map(att => ({
       ...att,
-      objectPath: extractBucketObjectPath(att.file_url, {
+      objectPath: evidenceObjectPath(att.file_url, {
         bucketName: this.bucketName,
         supabaseUrl: this.supabaseUrl
       })

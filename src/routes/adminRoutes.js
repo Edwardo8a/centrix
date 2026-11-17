@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 router.use(roleCheck([UserRole.ADMINISTRADOR]));
+router.get('/roles', AdminController.getRoles);
 
 // HU-11: Creacion de usuario por administrador
 router.post(
