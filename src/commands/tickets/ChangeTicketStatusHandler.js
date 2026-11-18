@@ -1,6 +1,7 @@
 const { normalizeTicketStatus, isValidTransition, TicketStatus } = require('../../enums/TicketStatus');
 const UserRole = require('../../enums/UserRole');
 const BusinessError = require('../../exceptions/BusinessError');
+const notificationService = require('../../services/NotificationService');
 
 const SOPORTE_ALLOWED_TARGET_STATUSES = [
   TicketStatus.EN_REVISION,
@@ -85,6 +86,28 @@ class ChangeTicketStatusHandler {
       previousStatus: ticket.status,
       comment: command.comment ? command.comment.trim() : null
     });
+
+    // Notificar a creador y/o asignado del cambio de estado
+    const recipients = new Set();
+    if (ticket.created_by && ticket.created_by !== command.userId) {
+      recipients.add(ticket.created_by);
+    }
+    if (ticket.assigned_to && ticket.assigned_to !== command.userId) {
+      recipients.add(ticket.assigned_to);
+    }
+
+    for (const recipientId of recipients) {
+      notificationService.sendNotificationToUser({
+        userId: recipientId,
+        ticketId: command.ticketId,
+        title: `Ticket actualizado: ${normalizedStatus}`,
+        body: `El ticket "${ticket.title}" cambió al estado "${normalizedStatus}".`,
+        type: 'status_changed',
+        data: { ticket_id: command.ticketId, status: normalizedStatus }
+      }).catch(err => {
+        console.error('[ChangeTicketStatusHandler] Error enviando notificación:', err.message);
+      });
+    }
 
     return {
       id: result.id,

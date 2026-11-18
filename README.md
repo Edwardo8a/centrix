@@ -7,7 +7,7 @@
 ![Testing](https://img.shields.io/badge/Testing-Jest-red.svg)
 ![Linter](https://img.shields.io/badge/Linter-ESLint%209-purple.svg)
 
-Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**, **Express**, **Supabase** (PostgreSQL) e implementado bajo una arquitectura desacoplada con el patron **CQRS (Command Query Responsibility Segregation)**, principios **SOLID** y un contenedor central de **Inyeccion de Dependencias**.
+Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**, **Express**, **Supabase** (PostgreSQL) e implementado bajo una arquitectura desacoplada con el patron **CQRS (Command Query Responsibility Segregation)**, principios **SOLID**, un contenedor central de **Inyeccion de Dependencias (Composition Root)** y notificaciones push via **Firebase Cloud Messaging (FCM)**.
 
 ---
 
@@ -26,10 +26,11 @@ Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**
 ## Caracteristicas Principales
 
 - **Arquitectura CQRS Estricta**: Separacion total entre la logica de mutacion (Commands y Handlers) y la logica de consulta directa (Queries y ReadModels).
-- **Inyeccion de Dependencias (Composition Root)**: Todo el grafo de dependencias se ensambla en `src/config/container.js`.
+- **Inyeccion de Dependencias (Composition Root)**: Todo el grafo de dependencias se ensambla en `src/config/container.js`. Los controladores son factory functions que reciben handlers inyectados.
 - **Segregacion de Interfaces y Contratos**: Separacion entre repositorios de escritura (`UserRepository`, `TicketRepository`) y modelos de lectura (`UserReadModel`, `TicketReadModel`, `DepartmentReadModel`) con contratos tipados en `src/contracts/index.js`.
-- **Servicios Aislados**: Extraccion de la comunicacion con Supabase Auth en `AuthService` y la firma de tokens en `TokenService`.
-- **Control de Calidad**: 100% de pruebas unitarias automatizadas con Jest y linteo con ESLint 9.
+- **Servicios Aislados**: Extraccion de la comunicacion con Supabase Auth en `AuthService`, la firma de tokens en `TokenService`, y las notificaciones push en `NotificationService` con Firebase Admin SDK.
+- **Notificaciones Push y en App**: Soporte para notificaciones push via FCM y notificaciones en tiempo real persistidas en Supabase.
+- **Control de Calidad**: Cobertura amplia de pruebas unitarias automatizadas con Jest (265 pruebas, 37 suites) y linteo con ESLint 9.
 - **Seguridad**: Autenticacion con JWT, control de acceso basado en roles (`UserRole`), sanitizacion con `express-validator` y cabeceras de proteccion con `helmet` y `cors`.
 
 ---
@@ -48,6 +49,7 @@ Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**
                v                                                       v
    +-----------------------+                               +-----------------------+
    |  Command Controllers  |                               |   Query Controllers   |
+   |   (Factory Pattern)   |                               |   (Factory Pattern)   |
    +-----------+-----------+                               +-----------+-----------+
                |                                                       |
                v                                                       v
@@ -60,15 +62,16 @@ Backend para el **Sistema de Gestion V2 (Centrix)** desarrollado con **Node.js**
    +-----------------------+                               +-----------------------+
    |   TicketRepository    |                               |    TicketReadModel    |
    |   UserRepository      |                               |  DepartmentReadModel  |
-   |   AuthService         |                               |    UserReadModel      |
+   |   NotificationService |                               |    UserReadModel      |
+   |   AuthService         |                               |                       |
    +-----------+-----------+                               +-----------+-----------+
                |                                                       |
                +---------------------------+---------------------------+
                                            |
                                            v
-                              +-------------------------+
-                              |   Supabase PostgreSQL   |
-                              +-------------------------+
+                   +-----------------------------------------------+
+                   | Supabase PostgreSQL / Firebase FCM (Push)    |
+                   +-----------------------------------------------+
 ```
 
 ---
@@ -98,6 +101,8 @@ Consulta [`ESTRUCTURA_PROYECTO.md`](./ESTRUCTURA_PROYECTO.md) para conocer el ar
    JWT_EXPIRES_IN=24h
    ```
 
+3. (Opcional) Notificaciones Push: Coloca tus credenciales de Firebase en `src/config/firebase-credentials.json` para habilitar el envio de push notifications via FCM. Si este archivo no esta presente, el sistema funciona con notificaciones in-app exclusivamente.
+
 ---
 
 ## Scripts Disponibles
@@ -111,13 +116,11 @@ Consulta [`ESTRUCTURA_PROYECTO.md`](./ESTRUCTURA_PROYECTO.md) para conocer el ar
 
 ## Estrategia de Pruebas y Calidad
 
-El proyecto cuenta con suites de pruebas unitarias que cubren los Handlers de escritura y los Queries de lectura utilizando mocks de sus dependencias:
-- `CreateTicketHandler.test.js`
-- `CreateUserHandler.test.js`
-- `LoginHandler.test.js`
-- `GetTicketsByDepartmentQuery.test.js`
-- `GetAllDepartmentsQuery.test.js`
-- `app.test.js`
+El proyecto cuenta con suites de pruebas unitarias exhaustivas organizadas en `tests/` que cubren Handlers de escritura, Handlers de lectura, servicios, controladores y repositorios utilizando mocks de dependencias externas:
+- **Commands:** `CreateTicketHandler`, `DeleteTicketHandler`, `ChangeTicketStatusHandler`, `AssignTicketHandler`, `AddTicketAttachmentHandler`, `LoginHandler`, `CreateUserHandler`
+- **Queries:** `GetAllTicketsHandler`, `GetMyTicketsHandler`, `GetAssignedTicketsHandler`, `GetTicketByIdHandler`, `GetTicketsByDepartmentHandler`, `GetDepartmentSolversHandler`, `GetAllDepartmentsQuery`
+- **Servicios:** `AuthService`, `TokenService`, `NotificationService`
+- **Infraestructura:** `app.test.js`, middlewares, repositorios
 
 Ejecucion:
 ```bash
@@ -137,12 +140,29 @@ npm test
 | Metodo | Endpoint | Descripcion | Acceso |
 |---|---|---|---|
 | `POST` | `/api/tickets` | Crea un nuevo ticket (HU-03) | Colaborador, Gerente, Admin |
-| `GET` | `/api/tickets/department/:departmentId` | Obtiene tickets por departamento | Gerente, Admin |
+| `GET` | `/api/tickets` | Lista todos los tickets (filtros y paginacion) | Admin |
+| `GET` | `/api/tickets/mine` | Lista tickets creados por el usuario | Autenticado |
+| `GET` | `/api/tickets/assigned` | Lista tickets asignados al usuario | Soporte Tecnico, Admin |
+| `GET` | `/api/tickets/department?department_id=` | Lista tickets por departamento | Gerente, Admin |
+| `GET` | `/api/tickets/:id` | Detalle completo de un ticket | Colaborador, Soporte, Gerente, Admin |
+| `PATCH` | `/api/tickets/:id/status` | Cambia estado segun matriz de transiciones | Gerente, Soporte, Admin |
+| `PATCH` | `/api/tickets/:id/assign` | Asigna un agente de soporte al ticket | Gerente, Admin |
+| `POST` | `/api/tickets/:id/attachments` | Sube un archivo adjunto al ticket | Autenticado |
+| `DELETE` | `/api/tickets/:id` | Borrado logico del ticket (soft delete) | Admin |
 
 ### Departamentos (`/api/departments`)
 | Metodo | Endpoint | Descripcion | Acceso |
 |---|---|---|---|
 | `GET` | `/api/departments` | Catalogo de departamentos (HU-13) | Autenticado |
+
+### Usuarios y Notificaciones (`/api/users` y `/api/notifications`)
+| Metodo | Endpoint | Descripcion | Acceso |
+|---|---|---|---|
+| `GET` | `/api/users/solvers?department_id=` | Lista agentes de soporte del departamento | Gerente, Admin |
+| `POST` | `/api/users/device-token` | Registra token FCM para push | Autenticado |
+| `DELETE` | `/api/users/device-token` | Da de baja token FCM | Autenticado |
+| `GET` | `/api/notifications?limit=&offset=` | Lista notificaciones in-app | Autenticado |
+| `PATCH` | `/api/notifications/:id/read` | Marca notificacion como leida | Autenticado |
 
 ### Administracion (`/api/admin`)
 | Metodo | Endpoint | Descripcion | Acceso |
@@ -154,6 +174,7 @@ npm test
 ## Documentacion Tecnica Modular
 
 Para mas detalles, consulta la carpeta [`docs/`](./docs/README.md):
+- **Indice General:** [`docs/README.md`](./docs/README.md)
 - **Evaluacion SOLID:** [`docs/SOLID.md`](./docs/SOLID.md)
 - **Guias de Conexion para Frontend:** `docs/conexion-apis/`
 - **Flujos HTTP paso a paso:** `docs/flujos-http/`

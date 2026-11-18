@@ -7,5 +7,7 @@ coverage/
 .scannerwork/
 sonar-project.properties
 reportes
+firebase-credentials.json
+*credentials*.json
 
 
