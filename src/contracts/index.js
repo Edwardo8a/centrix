@@ -25,7 +25,9 @@
 
 /**
  * @typedef {Object} IUserRepository
- * @property {(userData: object, authId: string) => Promise<object>} create
+ * @property {(userData: object, authId: string, assignment?: object) => Promise<object>} create
+ * @property {(role: string, departmentId: string|null) => Promise<{role: string, roleId: number, departmentId: string|null}>} resolveAssignment
+ * @property {() => Promise<Array<{role: string, description: string}>>} getRoles
  * @property {(id: string) => Promise<object|null>} findById
  * @property {(userId: string, data: object) => Promise<object|null>} update
  * @property {(userId: string) => Promise<object|null>} softDelete

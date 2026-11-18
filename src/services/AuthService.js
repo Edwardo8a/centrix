@@ -20,16 +20,28 @@ class AuthService {
   }
 
   async signUp(email, password) {
-    const { data, error } = await this.authClient.auth.signUp({
+    if (!this.adminClient) {
+      throw new BusinessError('El alta administrativa requiere SUPABASE_SERVICE_ROLE_KEY en el backend', 500);
+    }
+    // Administrative provisioning: the protected admin endpoint activates the account.
+    // createUser does not send signup emails or change the current auth session.
+    const { data, error } = await this.adminClient.auth.admin.createUser({
       email,
-      password
+      password,
+      email_confirm: true
     });
 
     if (error) {
+      if (['email_exists', 'user_already_exists'].includes(error.code)) {
+        throw new BusinessError('Ya existe una cuenta con ese correo electrónico.', 409);
+      }
+      if (error.status === 429) {
+        throw new BusinessError('Supabase limitó temporalmente las altas. Inténtalo más tarde.', 429);
+      }
       throw new BusinessError(`Error al crear usuario en Auth: ${error.message}`, 400);
     }
     
-    if (!data.user) {
+    if (!data?.user?.id) {
       throw new BusinessError('No se pudo obtener el ID del usuario creado en Auth.', 500);
     }
 
