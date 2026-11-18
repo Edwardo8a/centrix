@@ -1,13 +1,20 @@
 class GetAllDepartmentsQuery {
   /**
-   * @param {{ departmentReadModel: import('../../contracts').IDepartmentReadModel }} deps
+   * DTO de consulta para obtener todos los departamentos.
+   * Mantiene compatibilidad hacia atrás en caso de instanciarse con departmentReadModel.
+   * @param {{ departmentReadModel?: import('../../contracts').IDepartmentReadModel }} [deps]
    */
-  constructor({ departmentReadModel }) {
-    this.departmentReadModel = departmentReadModel;
+  constructor({ departmentReadModel } = {}) {
+    this.departmentReadModel = departmentReadModel || null;
+    Object.freeze(this);
   }
 
+  // Compatibilidad hacia atrás con tests existentes
   async execute() {
-    return await this.departmentReadModel.getAll();
+    if (this.departmentReadModel && typeof this.departmentReadModel.getAll === 'function') {
+      return await this.departmentReadModel.getAll();
+    }
+    return [];
   }
 }
 
