@@ -110,15 +110,6 @@ class TicketReadModel {
     return data.map(ticket => this._mapTicketSummary(ticket));
   }
 
-  async getPendingTickets(departmentId = null) {
-    let query = this.supabase.from('tickets').select(TICKET_SUMMARY_SELECT)
-      .is('deleted_at', null).in('status', ['Abierto', 'En revision', 'En progreso']);
-    if (departmentId) query = query.eq('department_id', departmentId);
-    const { data, error } = await query.order('created_at', { ascending: false });
-    if (error) throw error;
-    return (data || []).map(ticket => this._mapTicketSummary(ticket));
-  }
-
   async getTicketsByAssignee(userId) {
     const { data, error } = await this.supabase
       .from('tickets')

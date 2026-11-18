@@ -8,7 +8,6 @@ class CreateUserHandler {
   }
 
   async handle(command) {
-    const assignment = await this.userRepository.resolveAssignment(command.role, command.department_id);
     const { authId } = await this.authService.signUp(command.email, command.password);
 
     try {
@@ -18,7 +17,7 @@ class CreateUserHandler {
         apellido_mat: command.apellido_mat,
         tel: command.tel,
         email: command.email
-      }, authId, assignment);
+      }, authId);
       
       return { id: user.id };
     } catch (err) {

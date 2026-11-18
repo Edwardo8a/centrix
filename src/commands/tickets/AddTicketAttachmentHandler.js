@@ -3,7 +3,7 @@ const BusinessError = require('../../exceptions/BusinessError');
 
 const ALLOWED_ATTACHMENT_FORMATS = Object.freeze(['jpg', 'jpeg', 'png', 'webp', 'pdf']);
 const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB (5,242,880 bytes)
-const DEFAULT_ATTACHMENTS_BUCKET = process.env.SUPABASE_ATTACHMENTS_BUCKET || process.env.SUPABASE_STORAGE_BUCKET || 'evidencias';
+const DEFAULT_ATTACHMENTS_BUCKET = process.env.SUPABASE_ATTACHMENTS_BUCKET || 'ticket-attachments';
 
 const MIME_TO_FORMAT = Object.freeze({
   'image/jpeg': 'jpg',

@@ -10,7 +10,7 @@ Esta guia describe como el equipo de Frontend (Flutter / Web) debe conectarse al
 | :--- | :--- |
 | **Metodo HTTP** | `POST` |
 | **Ruta** | `/api/admin/users` |
-| **URL Base Local** | `http://localhost:3000` (o `http://10.0.2.2:3000` en emulador Android, según `PORT`) |
+| **URL Base Local** | `http://localhost:3001` (o `http://10.0.2.2:3001` en emulador Android) |
 | **Autenticacion** | Requerida (`Bearer Token`) |
 | **Roles Autorizados** | `administrador` |
 | **Tipo de Operacion CQRS** | Command (Alta en Auth y persistencia en base de datos) |
@@ -35,9 +35,7 @@ Authorization: Bearer <TOKEN_JWT_DEL_ADMINISTRADOR>
   "nombre": "Carlos",
   "apellido_pat": "Hernandez",
   "apellido_mat": "Lopez",
-  "tel": "4271122334",
-  "role": "gerente",
-  "department_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+  "tel": "4271122334"
 }
 ```
 
@@ -48,13 +46,6 @@ Authorization: Bearer <TOKEN_JWT_DEL_ADMINISTRADOR>
 - **`apellido_pat`** (String, Obligatorio): Primer apellido.
 - **`apellido_mat`** (String, Opcional): Segundo apellido.
 - **`tel`** (String, Opcional): Numero de telefono de contacto.
-- **`role`** (String): `colaborador`, `gerente`, `soporte_tecnico` o `administrador`. Si se omite se usa Colaborador, nunca el ID fijo 1.
-- **`department_id`** (UUID): Departamento existente. Obligatorio salvo para Administrador.
-
-El catalogo se consulta con `GET /api/admin/roles`, con el mismo JWT de administrador. Devuelve `data: [{ "role": "gerente", "description": "gerente" }, ...]`.
-El servidor resuelve el ID de rol por descripcion, valida el departamento antes de crear Auth y guarda un solo rol para la cuenta nueva.
-El alta usa `auth.admin.createUser` desde el backend con `email_confirm: true`: la cuenta se activa por decisión administrativa y no se envía un correo de confirmación. Requiere `SUPABASE_SERVICE_ROLE_KEY` exclusivamente en el servidor. No modifica la configuración general de confirmación de correos del proyecto.
-Las cuentas existentes no se modifican mediante este endpoint. Las pantallas financieras del rol Gerente continúan siendo visuales.
 
 ---
 

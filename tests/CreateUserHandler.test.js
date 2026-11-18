@@ -12,7 +12,6 @@ describe('CreateUserHandler', () => {
       deleteUser: jest.fn()
     };
     mockUserRepository = {
-      resolveAssignment: jest.fn().mockResolvedValue({ role: 'colaborador', roleId: 3, departmentId: null }),
       create: jest.fn()
     };
     handler = new CreateUserHandler({
@@ -46,8 +45,7 @@ describe('CreateUserHandler', () => {
         tel: '123',
         email: 'test@test.com'
       },
-      'auth-123',
-      { role: 'colaborador', roleId: 3, departmentId: null }
+      'auth-123'
     );
     expect(mockAuthService.deleteUser).not.toHaveBeenCalled();
   });

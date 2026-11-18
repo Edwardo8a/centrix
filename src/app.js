@@ -6,7 +6,6 @@ const errorHandler = require('./middlewares/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
-const ticketEvidenceRoutes = require('./routes/ticketEvidenceRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -27,7 +26,6 @@ app.get('/health', (req, res) => {
 
 // Rutas de la API (Arquitectura CQRS)
 app.use('/api/auth', authRoutes);
-app.use('/api/tickets', ticketEvidenceRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/departments', departmentRoutes);

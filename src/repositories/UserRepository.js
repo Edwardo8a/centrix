@@ -1,38 +1,11 @@
 const UserRole = require('../enums/UserRole');
-const BusinessError = require('../exceptions/BusinessError');
 
 class UserRepository {
   constructor({ supabase }) {
     this.supabase = supabase;
   }
 
-  async getRoles() {
-    const { data, error } = await this.supabase.from('roles').select('id, descripcion').order('id');
-    if (error) throw error;
-    return (data || []).map(row => ({ role: String(row.descripcion).trim().toLowerCase(), description: row.descripcion }))
-      .filter(row => Object.values(UserRole).includes(row.role));
-  }
-
-  async resolveAssignment(role = UserRole.COLABORADOR, departmentId = null) {
-    const normalized = typeof role === 'string' ? role.trim().toLowerCase() : '';
-    if (!Object.values(UserRole).includes(normalized)) throw new BusinessError('Selecciona un rol válido', 400);
-    if (normalized !== UserRole.ADMINISTRADOR && !departmentId) {
-      throw new BusinessError('El departamento es obligatorio para el rol seleccionado', 400);
-    }
-    const { data: roleRecord, error } = await this.supabase.from('roles').select('id, descripcion')
-      .ilike('descripcion', normalized).maybeSingle();
-    if (error) throw error;
-    if (!roleRecord) throw new BusinessError('El rol seleccionado no está configurado', 400);
-    if (departmentId) {
-      const department = await this.supabase.from('departments').select('id').eq('id', departmentId).maybeSingle();
-      if (department.error) throw department.error;
-      if (!department.data) throw new BusinessError('El departamento seleccionado no existe', 400);
-    }
-    return { role: normalized, roleId: roleRecord.id, departmentId: departmentId || null };
-  }
-
-  async create(userData, authId, resolvedAssignment = null) {
-    const assignment = resolvedAssignment || await this.resolveAssignment(userData.role, userData.department_id);
+  async create(userData, authId) {
     // 1. Insertar en la tabla users
     const { data: userRecord, error: userError } = await this.supabase
       .from('users')
@@ -42,8 +15,7 @@ class UserRepository {
         apellido_pat: userData.apellido_pat,
         apellido_mat: userData.apellido_mat,
         tel: userData.tel,
-        email: userData.email,
-        department_id: assignment.departmentId
+        email: userData.email
       }])
       .select()
       .single();
@@ -52,24 +24,33 @@ class UserRepository {
       throw new Error(`Error al crear el usuario: ${userError.message}`);
     }
 
-    // Only this newly created account: remove roles assigned automatically by a DB trigger.
-    const { error: cleanupError } = await this.supabase.from('user_roles').delete().eq('user_id', userRecord.id);
-    if (cleanupError) {
+    // 2. Resolver el rol por defecto ('colaborador') por descripcion (case-insensitive)
+    const { data: roleRecord, error: roleLookupError } = await this.supabase
+      .from('roles')
+      .select('id, descripcion')
+      .ilike('descripcion', UserRole.COLABORADOR)
+      .maybeSingle();
+
+    if (roleLookupError || !roleRecord) {
       await this.supabase.from('users').delete().eq('id', userRecord.id);
-      throw cleanupError;
+      throw new Error(
+        `Error al obtener el rol por defecto (${UserRole.COLABORADOR}): ${
+          roleLookupError ? roleLookupError.message : 'Rol no encontrado'
+        }`
+      );
     }
 
-    // Resolve by description, never assume that role ID 1 is a collaborator.
+    // 3. Asignar el rol por defecto en user_roles
     const { error: rolError } = await this.supabase
       .from('user_roles')
       .insert([{
         user_id: userRecord.id,
-        role_id: assignment.roleId
+        role_id: roleRecord.id
       }]);
 
     if (rolError) {
       await this.supabase.from('users').delete().eq('id', userRecord.id);
-      throw new Error(`Error al asignar el rol seleccionado: ${rolError.message}`);
+      throw new Error(`Error al asignar el rol por defecto: ${rolError.message}`);
     }
 
     return userRecord;

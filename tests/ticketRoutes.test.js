@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const app = require('../src/app');
 const jwtConfig = require('../src/config/jwt');
 const UserRole = require('../src/enums/UserRole');
-const { DEFAULT_ATTACHMENTS_BUCKET } = require('../src/commands/tickets/AddTicketAttachmentHandler');
 const { userReadModel, ticketReadModel, ticketRepository } = require('../src/config/container');
 
 describe('Ticket & Solver Routes HTTP Integration', () => {
@@ -799,7 +798,7 @@ describe('Ticket & Solver Routes HTTP Integration', () => {
 
   describe('POST /api/tickets/:id/attachments', () => {
     const validPayload = {
-      file_url: `${DEFAULT_ATTACHMENTS_BUCKET}/${validTicketId}/evidencia.png`,
+      file_url: `ticket-attachments/${validTicketId}/evidencia.png`,
       file_format: 'png',
       size_bytes: 256000
     };
