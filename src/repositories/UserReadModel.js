@@ -123,6 +123,83 @@ class UserReadModel {
           .trim()
       }));
   }
+
+  async getAllUsers({ role = null, departmentId = null, search = null, page = 1, limit = 20 } = {}) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let queryBuilder = this.supabase
+      .from('users')
+      .select(`
+        id,
+        full_name,
+        apellido_pat,
+        apellido_mat,
+        email,
+        tel,
+        department_id,
+        user_roles (
+          roles (
+            descripcion
+          )
+        )
+      `, { count: 'exact' })
+      .is('deleted_at', null);
+
+    if (departmentId) {
+      queryBuilder = queryBuilder.eq('department_id', departmentId);
+    }
+
+    if (search) {
+      queryBuilder = queryBuilder.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+
+    const { data, error, count } = await queryBuilder
+      .order('full_name', { ascending: true })
+      .range(from, to);
+
+    if (error) throw error;
+
+    let items = (data || []).map(user => {
+      const roles = (user.user_roles || [])
+        .map(rp => rp.roles?.descripcion)
+        .filter(Boolean)
+        .map(r => String(r).trim().toLowerCase());
+
+      return {
+        id: user.id,
+        nombre: user.full_name,
+        apellido_pat: user.apellido_pat,
+        apellido_mat: user.apellido_mat,
+        fullName: [user.full_name, user.apellido_pat, user.apellido_mat]
+          .filter(Boolean)
+          .join(' ')
+          .trim(),
+        email: user.email,
+        tel: user.tel,
+        departmentId: user.department_id ?? null,
+        role: resolvePrimaryRole(roles),
+        roles
+      };
+    });
+
+    if (role) {
+      const normalizedRole = String(role).trim().toLowerCase();
+      items = items.filter(u => u.roles.includes(normalizedRole));
+    }
+
+    const total = count ?? 0;
+
+    return {
+      items,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: total === 0 ? 0 : Math.ceil(total / limit)
+      }
+    };
+  }
 }
 
 module.exports = UserReadModel;

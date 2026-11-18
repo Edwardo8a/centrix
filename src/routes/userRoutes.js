@@ -2,15 +2,31 @@ const express = require('express');
 const authMiddleware = require('../middlewares/auth');
 const roleCheck = require('../middlewares/roleCheck');
 const UserRole = require('../enums/UserRole');
-const { getSolversValidator, deviceTokenValidator } = require('../validators/userValidator');
+const {
+  getSolversValidator,
+  getAllUsersValidator,
+  updateUserValidator,
+  deleteUserValidator,
+  deviceTokenValidator
+} = require('../validators/userValidator');
 const { validateResult } = require('../utils/validatorHelpers');
-const { userQueryController } = require('../config/container');
+const { userQueryController, adminController } = require('../config/container');
 const notificationService = require('../services/NotificationService');
 const ResponseBuilder = require('../utils/responseBuilder');
 
 const router = express.Router();
 
 router.use(authMiddleware);
+
+// --- CQRS QUERIES (Lecturas) ---
+
+router.get(
+  '/',
+  roleCheck([UserRole.ADMINISTRADOR]),
+  getAllUsersValidator,
+  validateResult,
+  userQueryController.getAll
+);
 
 router.get(
   '/solvers',
@@ -19,6 +35,8 @@ router.get(
   validateResult,
   userQueryController.getSolvers
 );
+
+// --- CQRS COMMANDS (Escrituras) ---
 
 // Registrar o actualizar token de dispositivo FCM
 router.post(
@@ -60,5 +78,20 @@ router.delete(
   }
 );
 
-module.exports = router;
+router.put(
+  '/:id',
+  roleCheck([UserRole.ADMINISTRADOR]),
+  updateUserValidator,
+  validateResult,
+  adminController.updateUser
+);
 
+router.delete(
+  '/:id',
+  roleCheck([UserRole.ADMINISTRADOR]),
+  deleteUserValidator,
+  validateResult,
+  adminController.deleteUser
+);
+
+module.exports = router;

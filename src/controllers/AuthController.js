@@ -1,9 +1,8 @@
 const LoginCommand = require('../commands/auth/LoginCommand');
-const { loginHandler } = require('../config/container');
 const ResponseBuilder = require('../utils/responseBuilder');
 
-class AuthController {
-  static async login(req, res, next) {
+const authControllerFactory = ({ loginHandler }) => ({
+  login: async (req, res, next) => {
     try {
       const { email, password } = req.body;
       const command = new LoginCommand({ email, password });
@@ -13,6 +12,6 @@ class AuthController {
       next(error);
     }
   }
-}
+});
 
-module.exports = AuthController;
+module.exports = authControllerFactory;
