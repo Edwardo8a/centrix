@@ -1,8 +1,6 @@
 const logger = require('../utils/logger');
-const {
-  DEFAULT_ATTACHMENTS_BUCKET,
-  extractBucketObjectPath
-} = require('../commands/tickets/AddTicketAttachmentHandler');
+const { DEFAULT_ATTACHMENTS_BUCKET } = require('../commands/tickets/AddTicketAttachmentHandler');
+const { evidenceObjectPath } = require('./FileStorageService');
 
 const DEFAULT_SIGNED_URL_TTL_SECONDS = 3600; // 1 hora
 
@@ -42,7 +40,7 @@ class StorageService {
 
     const itemsWithPaths = sorted.map(att => ({
       ...att,
-      objectPath: extractBucketObjectPath(att.file_url, {
+      objectPath: evidenceObjectPath(att.file_url, {
         bucketName: this.bucketName,
         supabaseUrl: this.supabaseUrl
       })
