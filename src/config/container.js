@@ -37,8 +37,8 @@ const GetPendingTicketsHandler = require('../queries/tickets/GetPendingTicketsHa
 
 const evidenceDependencies = {
   ticketRepository,
-  evidenceRepository: new EvidenceRepository({ supabase: adminClient }),
-  fileStorageService: new FileStorageService({ supabase: adminClient }),
+  evidenceRepository: new EvidenceRepository({ supabase: adminClient || dataClient }),
+  fileStorageService: new FileStorageService({ supabase: adminClient || dataClient }),
   accessPolicy: new TicketEvidenceAccessPolicy()
 };
 const attachTicketEvidenceHandler = new AttachTicketEvidenceHandler(evidenceDependencies);
