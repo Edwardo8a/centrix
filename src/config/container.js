@@ -23,10 +23,27 @@ const ticketReadModel = new TicketReadModel({
   storageService
 });
 const departmentReadModel = new DepartmentReadModel({ supabase: dataClient });
-const userRepository = new UserRepository({ supabase: dataClient });
+const userRepository = new UserRepository({ supabase: adminClient || dataClient });
 const userReadModel = new UserReadModel({ supabase: dataClient });
 const resourceRequestRepository = new ResourceRequestRepository({ supabase: adminClient || dataClient });
 const resourceRequestReadModel = new ResourceRequestReadModel({ supabase: adminClient || dataClient });
+
+const EvidenceRepository = require('../repositories/EvidenceRepository');
+const FileStorageService = require('../services/FileStorageService');
+const TicketEvidenceAccessPolicy = require('../services/TicketEvidenceAccessPolicy');
+const AttachTicketEvidenceHandler = require('../commands/tickets/AttachTicketEvidenceHandler');
+const GetTicketEvidencesQuery = require('../queries/tickets/GetTicketEvidencesQuery');
+const GetPendingTicketsHandler = require('../queries/tickets/GetPendingTicketsHandler');
+
+const evidenceDependencies = {
+  ticketRepository,
+  evidenceRepository: new EvidenceRepository({ supabase: adminClient }),
+  fileStorageService: new FileStorageService({ supabase: adminClient }),
+  accessPolicy: new TicketEvidenceAccessPolicy()
+};
+const attachTicketEvidenceHandler = new AttachTicketEvidenceHandler(evidenceDependencies);
+const getTicketEvidencesQuery = new GetTicketEvidencesQuery(evidenceDependencies);
+const getPendingTicketsHandler = new GetPendingTicketsHandler({ ticketReadModel });
 
 const authService = new AuthService({ authClient, adminClient });
 const tokenService = new TokenService({ jwtConfig });
@@ -112,6 +129,7 @@ const userQueryController = userQueryControllerFactory({
 });
 
 const adminController = adminControllerFactory({
+  userRepository,
   createUserHandler,
   updateUserHandler,
   deleteUserHandler
@@ -137,6 +155,9 @@ const resourceRequestQueryController = resourceRequestQueryControllerFactory({
 });
 
 module.exports = {
+  attachTicketEvidenceHandler,
+  getTicketEvidencesQuery,
+  getPendingTicketsHandler,
   storageService,
   userReadModel,
   ticketRepository,
