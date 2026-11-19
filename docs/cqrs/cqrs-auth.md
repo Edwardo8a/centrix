@@ -1,6 +1,6 @@
 # CQRS en el Modulo de Autenticacion (Auth)
 
-Este documento detalla como se aplica el patron CQRS especificamente en el modulo de autenticacion del backend.
+Este documento detalla como se aplica el patron CQRS en el modulo de autenticacion del backend.
 
 ---
 
@@ -8,31 +8,30 @@ Este documento detalla como se aplica el patron CQRS especificamente en el modul
 
 Bajo la arquitectura CQRS, **el login es formalmente un Command**:
 
-1. **Efecto de Estado:** No es una lectura pasiva; emite una credencial de seguridad nueva (token JWT) con marca de tiempo y fecha de expiracion, creando un estado de sesion activa.
-2. **Accion de Seguridad Criptografica:** Interactua con Supabase Auth para verificar el hash de la contrasena. Si las credenciales fallan, lanza excepciones de negocio (401) e interrumpe el flujo.
-3. **Mapeo de Dominio:** Conecta la identidad de Supabase con el perfil de la base de datos relacional de la empresa (`users`, `user_roles`, `roles`).
+1. **Efecto de Estado:** Emite una credencial de seguridad nueva (token JWT firmado) con marca de tiempo y vigencia determinada.
+2. **Accion Criptografica:** Interactua con Supabase Auth mediante `AuthService.signIn` para verificar credenciales. Si fallan, arroja una excepcion de negocio interrumpiendo el flujo.
+3. **Mapeo de Identidad:** Asocia el `authId` del proveedor con los datos relacionales en la base de datos usando `UserReadModel.findById`.
 
 ```text
 POST /api/auth/login
        |
        v
-[ src/commands/auth/LoginCommand.js ]  (COMMAND - Modifica estado de sesion)
-       |-- Verifica contrasena con Supabase Auth
-       |-- Obtiene perfil con UserRepository.findPersonaById()
-       `-- Emite y firma el JWT con rol y vigencia
+[ src/commands/auth/LoginCommand.js ]  (DTO inmutable con { email, password })
+       |
+       v
+[ src/commands/auth/LoginHandler.js ]  (HANDLER - Orquesta la autenticacion)
+       |-- 1. authService.signIn(email, password)
+       |-- 2. userReadModel.findById(authId)
+       `-- 3. tokenService.generateToken(payload)
 ```
 
 ---
 
-## 2. Verificacion de Tokens en Middlewares
+## 2. Segregacion de Responsabilidades en Auth
 
-Cuando el usuario ya cuenta con un token JWT y las peticiones protegidas necesitan validar su identidad, la operacion se ejecuta a traves de:
-
-```text
-Cualquier ruta protegida (Bearer Token)
-       |
-       v
-[ src/middlewares/auth.js ]  (Lectura / Verificacion de claims)
-       |-- Decodifica y verifica la firma del token con jwt.verify
-       `-- Inyecta los claims decodificados en req.user
-```
+- **`LoginCommand.js`:** DTO puro que encapsula los datos recibidos desde el controlador.
+- **`LoginHandler.js`:** Caso de uso que orquesta el login sin acoplarse a Supabase ni a JWT directamente.
+- **`AuthService.js`:** Servicio que encapsula la comunicacion con Supabase Auth (`signIn`, `signUp`, `deleteUser`).
+- **`UserReadModel.js`:** Modelo de lectura que consulta el perfil y roles del usuario sin metodos de mutacion.
+- **`TokenService.js`:** Servicio que firma y parametriza el JWT.
+- **`auth.js` (Middleware):** Middleware que intercepta peticiones protegidas y valida la firma del token en cada peticion.

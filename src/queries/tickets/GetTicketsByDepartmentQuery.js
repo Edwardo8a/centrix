@@ -1,13 +1,9 @@
 class GetTicketsByDepartmentQuery {
-  /**
-   * @param {{ ticketReadModel: import('../../contracts').ITicketReadModel }} deps
-   */
-  constructor({ ticketReadModel }) {
-    this.ticketReadModel = ticketReadModel;
-  }
-
-  async execute(departmentId) {
-    return await this.ticketReadModel.getTicketsByDepartment(departmentId);
+  constructor({ userRole, userDepartmentId = null, departmentId = null } = {}) {
+    this.userRole = userRole;
+    this.userDepartmentId = userDepartmentId;
+    this.departmentId = departmentId;
+    Object.freeze(this);
   }
 }
 

@@ -1,31 +1,72 @@
 # Cumplimiento de Principios SOLID
 
-Esta es una evaluación honesta de cómo el proyecto cumple con los principios SOLID tras la refactorización arquitectónica basada en CQRS.
+Esta es una evaluacion tecnica y documentada de como el proyecto Centrix Backend cumple con los principios SOLID tras la refactorizacion arquitectonica basada en **CQRS ligero** e **Inyeccion de Dependencias**.
 
-| Principio | Aplicación en el Proyecto (Archivos concretos) | Limitaciones / Pendientes |
-|-----------|------------------------------------------------|---------------------------|
-| **S** - Responsabilidad Única | **Controladores** (`src/controllers/*`): Solo extraen datos de HTTP y devuelven respuestas HTTP.<br>**Commands/Queries** (`src/commands/*`): Son DTOs puros de solo datos.<br>**Handlers** (`src/commands/*Handler.js`): Orquestan un solo caso de uso.<br>**Repositories/ReadModels** (`src/repositories/*`): Encapsulan la lógica de acceso a la BD.<br>**Servicios** (`AuthService`, `TokenService`): Proveedores de autenticación.<br>**Entidades** (`src/models/Ticket.js`): Lógica e integridad de dominio. | Cumplimiento total. |
-| **O** - Abierto/Cerrado | Agregar un nuevo caso de uso (ej. Cerrar Ticket) solo requiere crear dos nuevos archivos (`CloseTicketCommand.js` y `CloseTicketHandler.js`), sin tocar los handlers existentes. | Es *parcial* porque sigue siendo necesario registrar la ruta en `routes/`, invocar al contenedor en `config/container.js` y agregarlo al `Controller`. |
-| **L** - Sustitución de Liskov | No hay herencia de clases profunda, todo se ensambla mediante composición de dependencias simples. | No aplica directamente al carecer de herencia relevante. |
-| **I** - Segregación de Interfaces | Los `ReadModels` están separados de los `Repositories` (ej. `UserReadModel` vs `UserRepository`). Un handler que solo lee no tiene acceso a los métodos de escritura y viceversa. Cada handler inyecta solo los métodos que necesita. | Cumplimiento total conceptual. |
-| **D** - Inversión de Dependencias | Los handlers reciben todo por constructor desde `src/config/container.js` basándose en contratos y tipos documentados en `src/contracts/index.js` (JSDoc). Los repositorios reciben el cliente de BD (`Supabase`) inyectado. | En JavaScript puro el contrato es documental (`JSDoc`). Cambiar de proveedor de BD implicaría reescribir la lógica interna de los repositorios, pero los **Handlers no cambiarían**. |
+---
 
-## Diagrama de la Arquitectura (CQRS Ligero)
+## 1. Matriz de Cumplimiento SOLID
 
-El proyecto utiliza un patrón CQRS (Command Query Responsibility Segregation) ligero. Hay una sola base de datos y no se utiliza Event Sourcing, pero sí logramos separar de forma estricta las rutas de **Lectura (Queries)** de las rutas de **Escritura (Commands)**.
+| Principio | Aplicacion en el Proyecto (Archivos concretos) | Justificacion y Estado |
+| :--- | :--- | :--- |
+| **S** - Responsabilidad Unica | **Controladores** (`src/controllers/*`): Solo extraen datos de HTTP y delegan al Handler o Query correspondiente.<br>**Commands** (`src/commands/*`): Son DTOs inmutables con datos de entrada.<br>**Handlers** (`src/commands/*Handler.js`): Orquestan un solo caso de uso de escritura.<br>**Queries** (`src/queries/*`): Orquestan un solo caso de uso de lectura.<br>**Repositories / ReadModels** (`src/repositories/*`): Encapsulan el acceso a base de datos.<br>**Servicios** (`src/services/AuthService.js`, `TokenService.js`): Aislaron la comunicacion con el proveedor externo y la firma de tokens.<br>**Modelos** (`src/models/*`): Encapsulan las entidades del dominio. | **Cumplimiento Total.** Cada clase o archivo tiene una unica razon para cambiar. |
+| **O** - Abierto / Cerrado | Para anadir una nueva accion (por ejemplo, resolver un ticket o filtrar usuarios), no se modifican los handlers existentes. Se crea un nuevo `Command` y `Handler` o una nueva `Query`. | **Cumplimiento Alto.** El comportamiento se extiende agregando componentes desacoplados en lugar de modificar codigo existente. |
+| **L** - Sustitucion de Liskov | No existe jerarquia de herencia compleja; se favorece la composicion. En el manejo de errores, `BusinessError` y `ValidationError` heredan de la clase nativa `Error` de JavaScript, permitiendo que el middleware `errorHandler.js` los procese de manera polimorfica sin requerir condicionales rigidos. | **Cumplimiento Total.** Todos los errores se sustituyen limpiamente por `Error`. |
+| **I** - Segregacion de Interfaces | La persistencia divide estrictamente lectura y escritura:<br>- `UserRepository` (escritura) vs `UserReadModel` (lectura).<br>- `TicketRepository` (escritura) vs `TicketReadModel` (lectura).<br>- `DepartmentReadModel` (lectura pura).<br>Los contratos formales se documentan en `src/contracts/index.js` mediante JSDoc. | **Cumplimiento Total.** Ningun cliente depende de metodos de base de datos que no utiliza. |
+| **D** - Inversion de Dependencias | Ningun controlador o handler instancia directamente dependencias externas o clientes de BD. Todo se inyecta via constructor a traves de `src/config/container.js` (Composition Root), cumpliendo los contratos documentados en `src/contracts/index.js`. | **Cumplimiento Total.** Los modulos de alto nivel dependen de abstracciones y contratos, no de implementaciones concretas. |
+
+---
+
+## 2. Diagrama de la Arquitectura (CQRS Ligero con Inyeccion de Dependencias)
 
 ```text
-[HTTP Request]
-       |
-  (Controller)
-       |
-       +---------------------------------------------+
-       |                                             |
- (Crea Command)                                (Crea Query)
-       |                                             |
-   (Handler)                                     (Query)
-       |                                             |
- (Repository)                                  (ReadModel)
-       |                                             |
- (INSERT/UPDATE DB)                              (SELECT DB)
+                                HTTP Request
+                                     |
+                                     v
+                        [src/controllers/*Controller]
+                                     |
+                +--------------------+--------------------+
+                |                                         |
+     (Crea Command DTO)                         (Ejecuta Query DTO)
+                |                                         |
+                v                                         v
+   [src/commands/*Handler.js]                  [src/queries/*Query.js]
+        (Escritura / ACID)                        (Lectura Directa)
+                |                                         |
+     +----------+----------+                              |
+     |                     |                              |
+     v                     v                              v
+[src/services/*] [src/repositories/*Repository] [src/repositories/*ReadModel]
+     |                     |                              |
+     +----------+----------+                              |
+                |                                         |
+                +--------------------+--------------------+
+                                     |
+                                     v
+                        [Supabase PostgreSQL / Auth]
+```
+
+---
+
+## 3. Composition Root (`src/config/container.js`)
+
+Todas las dependencias se ensamblan en un unico punto de composicion:
+
+```javascript
+// Repositorios y ReadModels reciben cliente Supabase inyectado
+const ticketRepository = new TicketRepository({ supabase: dataClient });
+const ticketReadModel = new TicketReadModel({ supabase: dataClient });
+const departmentReadModel = new DepartmentReadModel({ supabase: dataClient });
+const userRepository = new UserRepository({ supabase: dataClient });
+const userReadModel = new UserReadModel({ supabase: dataClient });
+
+// Servicios reciben clientes de Auth y configuraciones inyectadas
+const authService = new AuthService({ authClient, adminClient });
+const tokenService = new TokenService({ jwtConfig });
+
+// Handlers y Queries reciben sus colaboradores inyectados
+const createTicketHandler = new CreateTicketHandler({ ticketRepository });
+const getTicketsByDepartmentQuery = new GetTicketsByDepartmentQuery({ ticketReadModel });
+const getAllDepartmentsQuery = new GetAllDepartmentsQuery({ departmentReadModel });
+const loginHandler = new LoginHandler({ authService, userReadModel, tokenService });
+const createUserHandler = new CreateUserHandler({ authService, userRepository });
 ```

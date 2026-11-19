@@ -5,6 +5,7 @@ class CreateTicketCommand {
     this.priority = priority;
     this.departmentId = departmentId;
     this.userId = userId;
+    Object.freeze(this);
   }
 }
 
