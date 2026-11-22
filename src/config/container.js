@@ -4,6 +4,7 @@ const { dataClient, authClient, adminClient } = require('./supabaseClient');
 const TicketRepository = require('../repositories/TicketRepository');
 const TicketReadModel = require('../repositories/TicketReadModel');
 const DepartmentReadModel = require('../repositories/DepartmentReadModel');
+const DepartmentRepository = require('../repositories/DepartmentRepository');
 const UserRepository = require('../repositories/UserRepository');
 const UserReadModel = require('../repositories/UserReadModel');
 const ResourceRequestRepository = require('../repositories/ResourceRequestRepository');
@@ -23,6 +24,7 @@ const ticketReadModel = new TicketReadModel({
   storageService
 });
 const departmentReadModel = new DepartmentReadModel({ supabase: dataClient });
+const departmentRepository = new DepartmentRepository({ supabase: adminClient || dataClient });
 const userRepository = new UserRepository({ supabase: adminClient || dataClient });
 const userReadModel = new UserReadModel({ supabase: dataClient });
 const resourceRequestRepository = new ResourceRequestRepository({ supabase: adminClient || dataClient });
@@ -61,6 +63,7 @@ const GetAllTicketsHandler = require('../queries/tickets/GetAllTicketsHandler');
 const GetTicketByIdHandler = require('../queries/tickets/GetTicketByIdHandler');
 const GetDepartmentSolversHandler = require('../queries/users/GetDepartmentSolversHandler');
 const GetAllDepartmentsHandler = require('../queries/departments/GetAllDepartmentsHandler');
+const CreateDepartmentHandler = require('../commands/departments/CreateDepartmentHandler');
 const GetAllDepartmentsQuery = require('../queries/departments/GetAllDepartmentsQuery');
 const LoginHandler = require('../commands/auth/LoginHandler');
 const CreateUserHandler = require('../commands/admin/CreateUserHandler');
@@ -86,6 +89,7 @@ const getAllTicketsHandler = new GetAllTicketsHandler({ ticketReadModel });
 const getTicketByIdHandler = new GetTicketByIdHandler({ ticketReadModel });
 const getDepartmentSolversHandler = new GetDepartmentSolversHandler({ userReadModel });
 const getAllDepartmentsHandler = new GetAllDepartmentsHandler({ departmentReadModel });
+const createDepartmentHandler = new CreateDepartmentHandler({ departmentRepository });
 const getAllDepartmentsQuery = new GetAllDepartmentsQuery({ departmentReadModel });
 const loginHandler = new LoginHandler({ authService, userReadModel, tokenService });
 const createUserHandler = new CreateUserHandler({ authService, userRepository });
@@ -104,6 +108,7 @@ const userQueryControllerFactory = require('../controllers/UserQueryController')
 const adminControllerFactory = require('../controllers/AdminController');
 const authControllerFactory = require('../controllers/AuthController');
 const departmentQueryControllerFactory = require('../controllers/DepartmentQueryController');
+const departmentCommandControllerFactory = require('../controllers/DepartmentCommandController');
 const resourceRequestCommandControllerFactory = require('../controllers/ResourceRequestCommandController');
 const resourceRequestQueryControllerFactory = require('../controllers/ResourceRequestQueryController');
 
@@ -142,6 +147,7 @@ const authController = authControllerFactory({
 const departmentQueryController = departmentQueryControllerFactory({
   getAllDepartmentsHandler
 });
+const departmentCommandController = departmentCommandControllerFactory({ createDepartmentHandler });
 
 const resourceRequestCommandController = resourceRequestCommandControllerFactory({
   createResourceRequestHandler,
@@ -190,6 +196,7 @@ module.exports = {
   adminController,
   authController,
   departmentQueryController,
+  departmentCommandController,
   resourceRequestRepository,
   resourceRequestReadModel,
   createResourceRequestHandler,
