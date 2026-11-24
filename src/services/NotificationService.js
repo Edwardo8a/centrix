@@ -137,6 +137,15 @@ class NotificationService {
         body,
       },
       data: payloadData,
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'centrix_high_importance_channel',
+          priority: 'max',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+        },
+      },
       tokens,
     };
 
