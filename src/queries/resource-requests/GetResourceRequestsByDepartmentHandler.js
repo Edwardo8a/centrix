@@ -47,15 +47,17 @@ class GetResourceRequestsByDepartmentHandler {
       normalizedStatus = normalizeResourceRequestStatus(query.status);
     }
 
-    return await this.resourceRequestReadModel.getRequestsByDepartment(targetDepartmentId, {
+    const options = {
       status: normalizedStatus,
-      category: query.category,
-      search: query.search,
-      month: query.month,
-      year: query.year,
       page,
       limit
-    });
+    };
+    if (query.category !== undefined && query.category !== null) options.category = query.category;
+    if (query.search !== undefined && query.search !== null) options.search = query.search;
+    if (query.month !== undefined && query.month !== null) options.month = query.month;
+    if (query.year !== undefined && query.year !== null) options.year = query.year;
+
+    return await this.resourceRequestReadModel.getRequestsByDepartment(targetDepartmentId, options);
   }
 }
 

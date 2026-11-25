@@ -16,7 +16,11 @@ class UpdateDepartmentBudgetHandler {
       throw new BusinessError('Se requiere un departamento para ajustar el presupuesto', 400);
     }
 
-    if (command.userRole !== UserRole.ADMINISTRADOR && command.userDepartmentId !== targetDeptId) {
+    if (command.userRole !== UserRole.ADMINISTRADOR && command.userRole !== UserRole.GERENTE) {
+      throw new BusinessError('Solo gerentes y administradores pueden modificar el presupuesto', 403);
+    }
+
+    if (command.userRole === UserRole.GERENTE && command.userDepartmentId !== targetDeptId) {
       throw new BusinessError('No tienes permisos para modificar el presupuesto de otro departamento', 403);
     }
 

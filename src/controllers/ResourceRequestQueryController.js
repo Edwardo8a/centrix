@@ -37,7 +37,7 @@ const resourceRequestQueryControllerFactory = ({
         month: req.query?.month ?? null,
         year: req.query?.year ?? null,
         page: req.query?.page !== undefined ? Number(req.query.page) : 1,
-        limit: req.query?.limit !== undefined ? Number(req.query.limit) : 50
+        limit: req.query?.limit !== undefined ? Number(req.query.limit) : 20
       });
 
       const data = await getResourceRequestsByDepartmentHandler.handle(query);

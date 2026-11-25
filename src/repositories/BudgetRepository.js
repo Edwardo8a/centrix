@@ -25,12 +25,16 @@ class BudgetRepository {
     if (!fs.existsSync(dir)) {
       try {
         fs.mkdirSync(dir, { recursive: true });
-      } catch (_) {}
+      } catch (err) {
+        void err;
+      }
     }
     if (!fs.existsSync(BUDGET_FILE)) {
       try {
         fs.writeFileSync(BUDGET_FILE, JSON.stringify({}, null, 2), 'utf8');
-      } catch (_) {}
+      } catch (err) {
+        void err;
+      }
     }
   }
 
@@ -39,7 +43,8 @@ class BudgetRepository {
       this._ensureStorage();
       const content = fs.readFileSync(BUDGET_FILE, 'utf8');
       return JSON.parse(content || '{}');
-    } catch (_) {
+    } catch (err) {
+      void err;
       return {};
     }
   }
@@ -70,7 +75,9 @@ class BudgetRepository {
       if (!error && data && data.allocations) {
         return { ...DEFAULT_ALLOCATIONS, ...data.allocations };
       }
-    } catch (_) {}
+    } catch (err) {
+      void err;
+    }
 
     const key = this.getKey(departmentId, year, month);
     const store = this._readBudgets();
@@ -101,7 +108,9 @@ class BudgetRepository {
         this._writeBudgets(store);
         return data.allocations;
       }
-    } catch (_) {}
+    } catch (err) {
+      void err;
+    }
 
     const key = this.getKey(departmentId, year, month);
     const store = this._readBudgets();
