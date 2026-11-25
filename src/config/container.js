@@ -8,6 +8,7 @@ const UserRepository = require('../repositories/UserRepository');
 const UserReadModel = require('../repositories/UserReadModel');
 const ResourceRequestRepository = require('../repositories/ResourceRequestRepository');
 const ResourceRequestReadModel = require('../repositories/ResourceRequestReadModel');
+const BudgetRepository = require('../repositories/BudgetRepository');
 const StorageService = require('../services/StorageService');
 const AuthService = require('../services/AuthService');
 const TokenService = require('../services/TokenService');
@@ -27,6 +28,7 @@ const userRepository = new UserRepository({ supabase: adminClient || dataClient 
 const userReadModel = new UserReadModel({ supabase: dataClient });
 const resourceRequestRepository = new ResourceRequestRepository({ supabase: adminClient || dataClient });
 const resourceRequestReadModel = new ResourceRequestReadModel({ supabase: adminClient || dataClient });
+const budgetRepository = new BudgetRepository({ supabase: adminClient || dataClient });
 
 const EvidenceRepository = require('../repositories/EvidenceRepository');
 const FileStorageService = require('../services/FileStorageService');
@@ -69,9 +71,13 @@ const UpdateUserHandler = require('../commands/users/UpdateUserHandler');
 const DeleteUserHandler = require('../commands/users/DeleteUserHandler');
 const CreateResourceRequestHandler = require('../commands/resource-requests/CreateResourceRequestHandler');
 const DeleteResourceRequestHandler = require('../commands/resource-requests/DeleteResourceRequestHandler');
+const DecideResourceRequestHandler = require('../commands/resource-requests/DecideResourceRequestHandler');
+const UpdateDepartmentBudgetHandler = require('../commands/resource-requests/UpdateDepartmentBudgetHandler');
 const GetMyResourceRequestsHandler = require('../queries/resource-requests/GetMyResourceRequestsHandler');
 const GetResourceRequestsByDepartmentHandler = require('../queries/resource-requests/GetResourceRequestsByDepartmentHandler');
 const GetResourceRequestByIdHandler = require('../queries/resource-requests/GetResourceRequestByIdHandler');
+const GetDepartmentBudgetHandler = require('../queries/resource-requests/GetDepartmentBudgetHandler');
+const GetDepartmentReportHandler = require('../queries/resource-requests/GetDepartmentReportHandler');
 
 const createTicketHandler = new CreateTicketHandler({ ticketRepository });
 const deleteTicketHandler = new DeleteTicketHandler({ ticketRepository });
@@ -93,9 +99,13 @@ const updateUserHandler = new UpdateUserHandler({ userRepository });
 const deleteUserHandler = new DeleteUserHandler({ userRepository });
 const createResourceRequestHandler = new CreateResourceRequestHandler({ resourceRequestRepository });
 const deleteResourceRequestHandler = new DeleteResourceRequestHandler({ resourceRequestRepository });
+const decideResourceRequestHandler = new DecideResourceRequestHandler({ resourceRequestRepository, budgetRepository });
+const updateDepartmentBudgetHandler = new UpdateDepartmentBudgetHandler({ budgetRepository });
 const getMyResourceRequestsHandler = new GetMyResourceRequestsHandler({ resourceRequestReadModel });
 const getResourceRequestsByDepartmentHandler = new GetResourceRequestsByDepartmentHandler({ resourceRequestReadModel });
 const getResourceRequestByIdHandler = new GetResourceRequestByIdHandler({ resourceRequestReadModel });
+const getDepartmentBudgetHandler = new GetDepartmentBudgetHandler({ budgetRepository });
+const getDepartmentReportHandler = new GetDepartmentReportHandler({ budgetRepository });
 
 // Controllers (Factories inyectadas en el contenedor)
 const ticketCommandControllerFactory = require('../controllers/TicketCommandController');
@@ -145,13 +155,17 @@ const departmentQueryController = departmentQueryControllerFactory({
 
 const resourceRequestCommandController = resourceRequestCommandControllerFactory({
   createResourceRequestHandler,
-  deleteResourceRequestHandler
+  deleteResourceRequestHandler,
+  decideResourceRequestHandler,
+  updateDepartmentBudgetHandler
 });
 
 const resourceRequestQueryController = resourceRequestQueryControllerFactory({
   getMyResourceRequestsHandler,
   getResourceRequestsByDepartmentHandler,
-  getResourceRequestByIdHandler
+  getResourceRequestByIdHandler,
+  getDepartmentBudgetHandler,
+  getDepartmentReportHandler
 });
 
 module.exports = {
@@ -192,11 +206,16 @@ module.exports = {
   departmentQueryController,
   resourceRequestRepository,
   resourceRequestReadModel,
+  budgetRepository,
   createResourceRequestHandler,
   deleteResourceRequestHandler,
+  decideResourceRequestHandler,
+  updateDepartmentBudgetHandler,
   getMyResourceRequestsHandler,
   getResourceRequestsByDepartmentHandler,
   getResourceRequestByIdHandler,
+  getDepartmentBudgetHandler,
+  getDepartmentReportHandler,
   resourceRequestCommandController,
   resourceRequestQueryController
 };

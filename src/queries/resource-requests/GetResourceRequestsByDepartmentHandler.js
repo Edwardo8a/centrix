@@ -49,6 +49,10 @@ class GetResourceRequestsByDepartmentHandler {
 
     return await this.resourceRequestReadModel.getRequestsByDepartment(targetDepartmentId, {
       status: normalizedStatus,
+      category: query.category,
+      search: query.search,
+      month: query.month,
+      year: query.year,
       page,
       limit
     });

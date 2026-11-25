@@ -34,7 +34,8 @@ class LoginHandler {
         fullName: fullName,
         role: user.role,
         roles: user.roles,
-        tel: user.tel
+        tel: user.tel,
+        department_id: user.department_id
       },
       token
     };
