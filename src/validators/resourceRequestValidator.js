@@ -71,9 +71,35 @@ const deleteResourceRequestValidator = [
     .withMessage('El ID de la solicitud debe ser un UUID válido')
 ];
 
+const decideResourceRequestValidator = [
+  param('id')
+    .isUUID()
+    .withMessage('El ID de la solicitud debe ser un UUID válido'),
+
+  body('status')
+    .optional()
+    .trim(),
+
+  body('decision')
+    .optional()
+    .trim(),
+
+  body('comment')
+    .optional({ nullable: true })
+    .trim()
+];
+
+const updateDepartmentBudgetValidator = [
+  body('allocations')
+    .isObject()
+    .withMessage('Las asignaciones de presupuesto deben ser un objeto { categoria: monto }')
+];
+
 module.exports = {
   createResourceRequestValidator,
   getResourceRequestsByDepartmentValidator,
   getResourceRequestByIdValidator,
-  deleteResourceRequestValidator
+  deleteResourceRequestValidator,
+  decideResourceRequestValidator,
+  updateDepartmentBudgetValidator
 };
