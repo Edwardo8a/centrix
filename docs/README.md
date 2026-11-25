@@ -10,6 +10,7 @@ Bienvenido a la documentacion tecnica y arquitectonica del backend de Centrix. L
 docs/
 |-- README.md                    # Indice principal y mapa general de documentacion (este archivo)
 |-- SOLID.md                     # Resumen y matriz de cumplimiento de principios SOLID
+|-- REPORTE_PRUEBAS_JEST.md      # Reporte detallado de pruebas unitarias y de integración
 |
 |-- conexion-apis/               # Guias tecnicas de consumo de endpoints para Frontend (Flutter/Web)
 |   |-- auth.md                  # Inicio de sesion (POST /api/auth/login)
@@ -20,18 +21,24 @@ docs/
 |   |-- tickets-asignar.md       # Asignacion de agente a ticket (PATCH /api/tickets/:id/assign)
 |   |-- tickets-eliminar.md      # Eliminacion logica de tickets (DELETE /api/tickets/:id)
 |   |-- tickets-adjuntos.md      # Subida de archivos adjuntos (POST /api/tickets/:id/attachments)
+|   |-- tickets-evidencias.md    # Evidencias con validacion binaria y URLs firmadas (/api/tickets/:id/evidences)
+|   |-- solicitudes-recursos.md  # Modulo de solicitudes de recursos (/api/resource-requests)
 |   |-- users-solvers.md         # Lista de agentes de soporte por departamento (GET /api/users/solvers)
 |   |-- notifications.md         # Notificaciones in-app y registro de tokens FCM
 |   |-- departamentos.md         # Catalogo de departamentos HU-13 (GET /api/departments)
 |   `-- admin-usuarios.md        # Registro de usuarios por administrador HU-11 (POST /api/admin/users)
 |
-|-- flujos-http/                 # Ruta paso a paso End-to-End (Frontend Flutter + Backend CQRS)
+|-- flujos-http/                 # Rutas paso a paso End-to-End (Frontend Flutter + Backend CQRS)
 |   |-- flujo-auth.md            # Ciclo de vida completo del login (View -> ViewModel -> Handler -> Service)
 |   |-- flujo-admin-usuarios.md  # Ciclo de vida completo de creacion de usuarios (Admin View -> Handler -> Supabase)
+|   |-- flujo-departamentos.md   # Catalogo y dropdowns de departamentos
 |   |-- flujo-tickets-crear.md   # Ciclo de vida completo de creacion de tickets (HU-03)
 |   |-- flujo-tickets-consulta.md# Ciclo de vida de consulta de tickets por departamento
 |   |-- flujo-tickets-estados.md # Ciclo de vida del cambio de estado con matriz y notificaciones FCM
-|   `-- flujo-tickets-asignar.md # Ciclo de vida de asignacion con validacion de agente y notificaciones
+|   |-- flujo-tickets-asignar.md # Ciclo de vida de asignacion con validacion de agente y notificaciones
+|   |-- flujo-tickets-adjuntos.md# Subida y visualizacion de evidencias/adjuntos
+|   |-- flujo-notificaciones.md  # Ciclo de vida de notificaciones push FCM y bandeja in-app
+|   `-- flujo-solicitudes-recursos.md # Ciclo de vida de solicitudes de recursos
 |
 |-- cqrs/                        # Separacion de Comandos y Consultas
 |   |-- cqrs-explicacion.md      # Teoria y fundamentos del patron CQRS
@@ -55,19 +62,28 @@ docs/
 | **Tickets** | `GET` | `/api/tickets` | Query | administrador | Lista todos los tickets (filtros + paginacion) |
 | **Tickets** | `GET` | `/api/tickets/mine` | Query | Todos autenticados | Tickets creados por el usuario |
 | **Tickets** | `GET` | `/api/tickets/assigned` | Query | soporte_tecnico, admin | Tickets asignados al usuario |
+| **Tickets** | `GET` | `/api/tickets/pending` | Query | gerente, administrador | Tickets pendientes de atencion |
 | **Tickets** | `GET` | `/api/tickets/department?department_id=` | Query | gerente, admin | Tickets asignados a un departamento |
 | **Tickets** | `GET` | `/api/tickets/:id` | Query | colaborador, soporte, gerente, admin | Detalle completo de un ticket |
 | **Tickets** | `PATCH` | `/api/tickets/:id/status` | Command | gerente, soporte, admin | Cambio de estado segun matriz |
 | **Tickets** | `PATCH` | `/api/tickets/:id/assign` | Command | gerente, admin | Asignacion de agente |
 | **Tickets** | `POST` | `/api/tickets/:id/attachments` | Command | Todos autenticados | Subida de archivo adjunto |
+| **Tickets** | `POST` | `/api/tickets/:id/evidences` | Command | colaborador, gerente, admin | Subida de evidencia validando magic bytes |
+| **Tickets** | `GET` | `/api/tickets/:id/evidences` | Query | Todos autenticados | Lista de evidencias con URLs firmadas |
 | **Tickets** | `DELETE` | `/api/tickets/:id` | Command | administrador | Borrado logico (soft delete) |
+| **Recursos** | `POST` | `/api/resource-requests` | Command | colaborador, gerente, admin | Crear solicitud de recursos |
+| **Recursos** | `GET` | `/api/resource-requests/mine` | Query | Todos autenticados | Mis solicitudes de recursos |
+| **Recursos** | `GET` | `/api/resource-requests/department/:id` | Query | gerente, admin | Solicitudes del departamento |
+| **Recursos** | `GET` | `/api/resource-requests/:id` | Query | propietario, gerente, admin | Detalle de solicitud de recurso |
+| **Recursos** | `DELETE`| `/api/resource-requests/:id` | Command | propietario, admin | Cancelar/eliminar solicitud |
 | **Departamentos** | `GET` | `/api/departments` | Query | Todos autenticados | Catalogo de departamentos (HU-13) |
 | **Usuarios** | `GET` | `/api/users/solvers?department_id=` | Query | gerente, admin | Lista de agentes de soporte por departamento |
 | **Usuarios** | `POST` | `/api/users/device-token` | Command | Todos autenticados | Registra token FCM para push |
 | **Usuarios** | `DELETE` | `/api/users/device-token` | Command | Todos autenticados | Da de baja token FCM |
 | **Notificaciones** | `GET` | `/api/notifications?limit=&offset=` | Query | Todos autenticados | Lista de notificaciones in-app |
 | **Notificaciones** | `PATCH` | `/api/notifications/:id/read` | Command | Todos autenticados | Marca notificacion como leida |
-| **Admin** | `POST` | `/api/admin/users` | Command | administrador | Alta de nuevos usuarios en Auth y BD (HU-11) |
+| **Admin** | `POST` | `/api/admin/users` | Command | administrador | Alta de nuevos usuarios con rol y depto (HU-11) |
+| **Admin** | `GET` | `/api/admin/roles` | Query | administrador | Catalogo de roles disponibles |
 | **Sistema** | `GET` | `/health` | - | Publico | Health check del servidor |
 
 ---
