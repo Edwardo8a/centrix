@@ -49,6 +49,24 @@ class ResourceRequestRepository {
     if (error) throw error;
     return data;
   }
+
+  async updateDecision(requestId, { status, rejectionReason, reviewedBy }) {
+    const { data, error } = await this.supabase
+      .from('resource_requests')
+      .update({
+        status,
+        rejection_reason: rejectionReason || null,
+        reviewed_by: reviewedBy,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', requestId)
+      .is('deleted_at', null)
+      .select('id, status, rejection_reason, reviewed_by')
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
 }
 
 module.exports = ResourceRequestRepository;

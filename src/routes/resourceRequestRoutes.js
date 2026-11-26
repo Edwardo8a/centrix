@@ -6,7 +6,9 @@ const {
   createResourceRequestValidator,
   getResourceRequestsByDepartmentValidator,
   getResourceRequestByIdValidator,
-  deleteResourceRequestValidator
+  deleteResourceRequestValidator,
+  decideResourceRequestValidator,
+  updateDepartmentBudgetValidator
 } = require('../validators/resourceRequestValidator');
 const { validateResult } = require('../utils/validatorHelpers');
 const {
@@ -20,7 +22,7 @@ router.use(authMiddleware);
 
 // --- CQRS QUERIES (Lecturas) ---
 
-// Consultar mis solicitudes
+// Consultar mis solicitudes (cualquier rol autenticado)
 router.get(
   '/mine',
   resourceRequestQueryController.getMine
@@ -35,10 +37,24 @@ router.get(
   resourceRequestQueryController.getByDepartment
 );
 
+// Consultar presupuesto del departamento
+router.get(
+  '/department/budget',
+  roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  resourceRequestQueryController.getBudget
+);
+
+// Consultar reporte mensual del departamento
+router.get(
+  '/department/report',
+  roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  resourceRequestQueryController.getReport
+);
+
 // Consultar detalle de solicitud por ID
 router.get(
   '/:id',
-  roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR, UserRole.SOPORTE_TECNICO]),
   getResourceRequestByIdValidator,
   validateResult,
   resourceRequestQueryController.getById
@@ -46,19 +62,37 @@ router.get(
 
 // --- CQRS COMMANDS (Escrituras) ---
 
-// Crear solicitud de recurso (Colaborador, Gerente o Administrador)
+// Crear solicitud de recurso (Colaborador, Soporte, Gerente o Administrador)
 router.post(
   '/',
-  roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR, UserRole.SOPORTE_TECNICO]),
   createResourceRequestValidator,
   validateResult,
   resourceRequestCommandController.create
 );
 
+// Ajustar presupuesto del departamento (Gerente o Administrador)
+router.put(
+  '/department/budget',
+  roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  updateDepartmentBudgetValidator,
+  validateResult,
+  resourceRequestCommandController.updateBudget
+);
+
+// Decisión de aprobación / rechazo (Gerente o Administrador)
+router.patch(
+  '/:id/decision',
+  roleCheck([UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  decideResourceRequestValidator,
+  validateResult,
+  resourceRequestCommandController.decide
+);
+
 // Eliminación lógica (soft delete) de solicitud
 router.delete(
   '/:id',
-  roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR]),
+  roleCheck([UserRole.COLABORADOR, UserRole.GERENTE, UserRole.ADMINISTRADOR, UserRole.SOPORTE_TECNICO]),
   deleteResourceRequestValidator,
   validateResult,
   resourceRequestCommandController.delete

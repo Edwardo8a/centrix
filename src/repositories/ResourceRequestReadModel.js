@@ -64,7 +64,7 @@ class ResourceRequestReadModel {
     return (data || []).map(r => this._mapSummary(r));
   }
 
-  async getRequestsByDepartment(departmentId, { status = null, page = 1, limit = 20 } = {}) {
+  async getRequestsByDepartment(departmentId, { status = null, category = null, search = null, month = null, year = null, page = 1, limit = 50 } = {}) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -78,15 +78,36 @@ class ResourceRequestReadModel {
       queryBuilder = queryBuilder.eq('status', status);
     }
 
+    if (category) {
+      queryBuilder = queryBuilder.eq('category', category);
+    }
+
+    if (search && search.trim()) {
+      const term = `%${search.trim()}%`;
+      queryBuilder = queryBuilder.or(`title.ilike.${term},description.ilike.${term}`);
+    }
+
     const { data, error, count } = await queryBuilder
       .order('created_at', { ascending: false })
       .range(from, to);
 
     if (error) throw error;
 
-    const total = count ?? 0;
+    let items = (data || []).map(r => this._mapSummary(r));
+
+    if (month || year) {
+      items = items.filter(r => {
+        if (!r.createdAtIso) return true;
+        const d = new Date(r.createdAtIso);
+        const matchYear = year ? d.getFullYear() === Number(year) : true;
+        const matchMonth = month ? (d.getMonth() + 1) === Number(month) : true;
+        return matchYear && matchMonth;
+      });
+    }
+
+    const total = count ?? items.length;
     return {
-      items: (data || []).map(r => this._mapSummary(r)),
+      items,
       pagination: {
         total,
         page,
