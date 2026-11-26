@@ -19,6 +19,11 @@
  */
 
 /**
+ * @typedef {Object} IDepartmentRepository
+ * @property {(department: import('../models/Department')) => Promise<{id: string, name: string, description: string|null}>} create
+ */
+
+/**
  * @typedef {Object} IDepartmentReadModel
  * @property {() => Promise<Array<object>>} getAll
  */
